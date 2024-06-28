@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.AlarmPushRuleMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.bms.domain.entity.AlarmPushRuleEntity">
+        <id column="id" property="id"/>
+        <result column="rule_name" property="ruleName"/>
+        <result column="rule_status" property="ruleStatus"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="description" property="description"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,rule_name,rule_status,tenant_id,description
+    </sql>
+
+    <select id="pageQuery" resultType="com.landleaf.bms.domain.response.AlarmPushRulePageResponse">
+        SELECT "id",
+        rule_name,
+        rule_status,
+        description
+        FROM tb_alarm_push_rule
+        WHERE deleted = 0
+        <if test="ruleName != null and ruleName != ''">
+            AND rule_name LIKE CONCAT('%', #{ruleName}::text, '%')
+        </if>
+        <if test="ruleStatus != null and ruleStatus != ''">
+            AND rule_status = #{ruleStatus}
+        </if>
+        ORDER BY "id";
+    </select>
+
+</mapper>

@@ -1,0 +1,9 @@
+influx1.x版本的连接工具，使用时需添加配置
+
+spring:
+  influx:
+    url: http://47.117.47.4:8086
+    user: admin
+    password: aA123456
+    database: homeauto
+    retention-policy: autogen

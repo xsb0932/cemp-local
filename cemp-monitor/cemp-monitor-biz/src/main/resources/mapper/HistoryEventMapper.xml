@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.monitor.dal.mapper.HistoryEventMapper">
+    <select id="selectPageList" resultType="com.landleaf.monitor.domain.response.AlarmListResponse">
+        select the.*,
+        tp.name as projectName,
+        tac.is_confirm as isConfirm,
+        case
+        when tu.id is not null then tu.nickname
+        else 'sys' end confirmUser,
+        tac.confirm_time as confirmTime,
+        tac.remark as confirmRemark,
+        tdi.name as objName
+        from tb_history_event the
+        left join tb_project tp on tp.biz_project_id = the.project_biz_id and tp.deleted = 0
+        left join tb_alarm_confirm tac on the.event_id = tac.event_id and tac.deleted = 0
+        left join tb_device_iot tdi on the.obj_id = tdi.biz_device_id and tdi.deleted = 0
+        left join tb_user tu on tac.confirm_user = tu.id and tu.deleted = 0
+        where the.deleted = 0
+        and
+        the.project_biz_id in
+        <foreach collection="request.projectBizIds" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="request.alarmCode != null and request.alarmCode != ''">
+            and the.alarm_code like '%' || #{request.alarmCode} || '%'
+        </if>
+        <if test="request.alarmType != null and request.alarmType != ''">
+            and the.alarm_type = #{request.alarmType}
+        </if>
+        <if test="request.alarmLevel != null and request.alarmLevel != ''">
+            and the.alarm_level = #{request.alarmLevel}
+        </if>
+        <if test="request.alarmStatus != null and request.alarmStatus != ''">
+            and the.alarm_status = #{request.alarmStatus}
+        </if>
+        <if test="request.objName != null and request.objName != ''">
+            and tdi.name like '%' || #{request.objName} || '%'
+        </if>
+        <if test="request.startTime != null">
+            <![CDATA[
+            and the.event_time >= #{request.startTime}
+            ]]>
+        </if>
+        <if test="request.endTime != null">
+            <![CDATA[
+            and the.event_time <= #{request.endTime}
+            ]]>
+        </if>
+        <if test="null != request.isConfirm">
+            and tac.id is
+            <if test="request.isConfirm">
+                not
+            </if>
+            null
+        </if>
+        order by the.event_time desc
+    </select>
+
+    <select id="selectExcelList" resultType="com.landleaf.monitor.domain.response.AlarmListResponse">
+        select the.*,
+        tp.name as projectName,
+        tac.is_confirm as isConfirm,
+        case
+        when tu.id is not null then tu.nickname
+        else 'sys' end confirmUser,
+        tac.confirm_time as confirmTime,
+        tac.remark as confirmRemark,
+        tdi.name as objName
+        from tb_history_event the
+        left join tb_project tp on tp.biz_project_id = the.project_biz_id and tp.deleted = 0
+        left join tb_alarm_confirm tac on the.event_id = tac.event_id and tac.deleted = 0
+        left join tb_device_iot tdi on the.obj_id = tdi.biz_device_id and tdi.deleted = 0
+        left join tb_user tu on tac.confirm_user = tu.id and tu.deleted = 0
+        where the.deleted = 0
+        and
+        the.project_biz_id in
+        <foreach collection="request.projectBizIds" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="request.alarmCode != null and request.alarmCode != ''">
+            and the.alarm_code like '%' || #{request.alarmCode} || '%'
+        </if>
+        <if test="request.alarmType != null and request.alarmType != ''">
+            and the.alarm_type = #{request.alarmType}
+        </if>
+        <if test="request.alarmLevel != null and request.alarmLevel != ''">
+            and the.alarm_level = #{request.alarmLevel}
+        </if>
+        <if test="request.alarmStatus != null and request.alarmStatus != ''">
+            and the.alarm_status = #{request.alarmStatus}
+        </if>
+        <if test="request.objName != null and request.objName != ''">
+            and tdi.name like '%' || #{request.objName} || '%'
+        </if>
+        <if test="request.startTime != null">
+            <![CDATA[
+            and the.event_time >= #{request.startTime}
+            ]]>
+        </if>
+        <if test="request.endTime != null">
+            <![CDATA[
+            and the.event_time <= #{request.endTime}
+            ]]>
+        </if>
+        <if test="null != request.isConfirm">
+            and tac.id is
+            <if test="request.isConfirm">
+                not
+            </if>
+            null
+        </if>
+        order by the.event_time desc
+    </select>
+
+    <select id="selectListByDeviceIds" resultType="com.landleaf.monitor.domain.response.AlarmListResponse">
+        select the.*,
+        tdi.name as objName
+        from tb_history_event the
+        left join tb_device_iot tdi on the.obj_id = tdi.biz_device_id and tdi.deleted = 0
+        where the.deleted = 0
+        and
+        the.obj_id in
+        <foreach collection="bizDeviceIds" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        order by the.event_time desc
+        limit 10
+    </select>
+
+    <select id="getRJDAlarms" resultType="com.landleaf.monitor.dto.AlarmResponse">
+        select t1.event_time as time,
+        t1.alarm_desc as alarm_desc,
+        t3.label as alarm_type,
+        (case when t2.is_confirm  = 't' then '已确认' else '未确认' end) as alarm_status
+        from tb_history_event t1
+            left join tb_alarm_confirm t2
+        on t1.event_id = t2.event_id and t2.deleted=0
+            join tb_dict_data t3 on t3.value = t1.alarm_type and t3.dict_code = 'ALARM_TYPE' and t3.deleted=0
+        where t1.tenant_id = #{tenantId} and t1.deleted = '0'
+        order by t1.event_time desc;
+    </select>
+
+    <select id="getUnconfirmedCount" resultType="com.landleaf.monitor.domain.dto.ProjUnconfirmedAlarmCountDTO">
+        select the.project_biz_id as bizProjId, count(1) as count from tb_history_event the
+        <if test="null != userId">
+            left join tb_project tp on the.project_biz_id=tp.biz_project_id and tp.deleted=0
+            left join tb_management_node tmn on tmn.biz_node_id=tp.biz_node_id and tmn.deleted=0
+            left join tb_user_node tun on tmn."path" like concat('%',tun.path,'%') and tun.deleted=0
+        </if>
+        where the.alarm_type in ('devAlarm', 'conAlarm', 'ruleAlarm')
+        and the.deleted=0
+        and the.tenant_id=#{tenantId}
+        <if test="null != userId">
+            and ((tun.type = 2 and tun.node_id=tmn.id) or (tun.type=1 and tmn.type = '00'))
+            and tun.deleted=0 and tmn.deleted=0 and tp.biz_project_id is not null
+            and tun.user_id = #{userId}
+        </if>
+        and not EXISTS (select 1 from tb_alarm_confirm where event_id = the.event_id and deleted=0)
+        group by the.project_biz_id
+    </select>
+
+    <select id="getUnconfirmedInfo" resultType="com.landleaf.monitor.domain.response.AlarmListResponse">
+        select the.*,
+        tdi.name as objName,
+        tp.name as projectName
+        from tb_history_event the
+        left join tb_device_iot tdi on the.obj_id = tdi.biz_device_id and tdi.deleted=0
+        left join tb_project tp on the.project_biz_id=tp.biz_project_id and tp.deleted=0
+        where the.alarm_type in ('devAlarm', 'conAlarm', 'ruleAlarm')
+        and the.deleted=0
+        and the.tenant_id=#{tenantId}
+        <if test="null != userId">
+            and the.project_biz_id IN (
+            SELECT tp.biz_project_id FROM tb_project tp
+            LEFT JOIN tb_management_node tmn ON tmn.biz_node_id = tp.biz_node_id
+            LEFT JOIN tb_user_node tun ON tmn."path" LIKE concat('%', tun.PATH, '%')
+            WHERE tp.deleted = 0
+            AND tun.user_id = #{userId}
+            AND tun.deleted = 0
+            AND tmn.deleted = 0
+            AND ((tun.TYPE = 2
+            AND tun.node_id = tmn.ID)
+            OR (tun.TYPE = 1
+            AND tmn.TYPE = '00'))
+            )
+        </if>
+        and not EXISTS (select 1 from tb_alarm_confirm where event_id = the.event_id and deleted=0)
+        <if test="null != currentId">
+            and the.id &lt; #{currentId}
+        </if>
+        order by the.id desc limit 1
+    </select>
+
+    <select id="selectCusCount" resultType="com.landleaf.monitor.domain.dto.AlarmTypeNumDTO">
+        select alarm_type as alarmType,
+        count(*) as number,
+        sum(case when tac.deleted = 0 then 1 else 0 end) as confirmNum
+        from tb_history_event the
+        left join tb_alarm_confirm tac on the.event_id = tac.event_id
+        where the.deleted = 0
+        <if test="request.startTime != null">
+            <![CDATA[
+            and the.event_time >= #{request.startTime}
+            ]]>
+        </if>
+        <if test="request.endTime != null">
+            <![CDATA[
+            and the.event_time <= #{request.endTime}
+            ]]>
+        </if>
+        <if test="null != request.projectBizIds">
+            and the.project_biz_id in
+            <foreach collection="request.projectBizIds" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        group by the.alarm_type
+    </select>
+
+    <select id="deviceEventsHistory" resultType="com.landleaf.monitor.api.dto.DeviceManagerEventHistoryDTO">
+        SELECT ta."id",
+        ta.event_time,
+        ta.event_id,
+        ta.alarm_type,
+        ta.alarm_code,
+        ta.alarm_desc,
+        ta.alarm_level,
+        ta.alarm_status,
+        tb.is_confirm AS isConfirm
+        FROM tb_history_event ta
+        LEFT JOIN tb_alarm_confirm tb ON ta.event_id = tb.event_id AND tb.deleted = 0
+        WHERE ta.deleted = 0
+        AND ta.alarm_obj_type = '01'
+        AND ta.obj_id = #{bizDeviceId}
+        <if test="alarmType != null and alarmType != ''">
+            AND ta.alarm_type = #{alarmType}
+        </if>
+        AND ta.event_time &gt;= #{start}
+        AND ta.event_time &lt;= #{end}
+        ORDER BY ta.event_time DESC
+    </select>
+
+    <select id="deviceEventsHistoryExport"
+            resultType="com.landleaf.monitor.api.dto.DeviceManagerEventHistoryDTO">
+        SELECT ta."id",
+        ta.event_time,
+        ta.event_id,
+        ta.alarm_type,
+        ta.alarm_code,
+        ta.alarm_desc,
+        ta.alarm_level,
+        ta.alarm_status,
+        tb.is_confirm AS isConfirm
+        FROM tb_history_event ta
+        LEFT JOIN tb_alarm_confirm tb ON ta.event_id = tb.event_id AND tb.deleted = 0
+        WHERE ta.deleted = 0
+        AND ta.alarm_obj_type = '01'
+        AND ta.obj_id = #{bizDeviceId}
+        <if test="alarmType != null and alarmType != ''">
+            AND ta.alarm_type = #{alarmType}
+        </if>
+        AND ta.event_time &gt;= #{start}
+        AND ta.event_time &lt;= #{end}
+        ORDER BY ta.event_time DESC
+    </select>
+</mapper>

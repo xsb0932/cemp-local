@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.MessageReceiveMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.bms.domain.entity.MessageReceiveEntity">
+        <id column="id" property="id"/>
+        <result column="msg_id" property="msgId"/>
+        <result column="biz_msg_id" property="bizMsgId"/>
+        <result column="target_tenant_id" property="targetTenantId"/>
+        <result column="target_user_id" property="targetUserId"/>
+        <result column="read_flag" property="readFlag"/>
+        <result column="receive_type" property="receiveType"/>
+        <result column="tenant_id" property="tenantId"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,msg_id,biz_msg_id,target_tenant_id,target_user_id,read_flag,receive_type,tenant_id
+    </sql>
+
+    <select id="selectListByMsgIds" resultType="com.landleaf.bms.domain.vo.MessageReceiveVO">
+        select tmr.*, tt.name as targetTenantName, tu.nickname AS targetUserName
+        from tb_message_receive tmr
+        left join tb_tenant tt on tt.id = tmr.target_tenant_id
+        left join tb_user tu on tmr.target_user_id = tu."id"
+        where tmr.deleted = 0 and tt.deleted = 0 and tu.deleted = 0
+        and tmr.msg_id in
+        <foreach collection="msgIds" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <update id="updateIsDeleted">
+        update tb_message_receive
+        set deleted = #{isDeleted}
+        where id in
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="selectEmailListByMsgId" resultType="java.lang.String">
+        select tu.email
+        from tb_message_receive tmr
+                 left join tb_user tu on tmr.target_user_id = tu."id"
+        where tmr.deleted = 0 and tu.deleted = 0
+          and tu.email is not null
+          and tmr.msg_id = #{msgId}
+    </select>
+</mapper>

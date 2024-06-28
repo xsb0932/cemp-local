@@ -1,0 +1,26 @@
+spring:
+  cloud:
+    nacos:
+      config:
+        server-addr: 172.20.1.92:18848
+        namespace: 85a45da8-c86e-4d76-b41d-e83b6b5cd154
+        group: DEFAULT_GROUP
+        file-extension: yaml
+      discovery:
+        server-addr: 172.20.1.92:18848
+        namespace: 85a45da8-c86e-4d76-b41d-e83b6b5cd154
+        group: DEFAULT_GROUP
+      username: nacos
+      password: landleaf@123.com
+  config:
+    import:
+      - optional:nacos:cemp-gw-jzd-dev
+      - optional:nacos:license
+
+mqtt:
+  enable: true
+  server-url: tcp://emqx.emp.landib.com:603
+  username: admin
+  password: landleaf@123.com
+  client-id: gw_jzd_dev_local
+  send-client-max-size: 16

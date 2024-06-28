@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.AlarmPushUserMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.bms.domain.entity.AlarmPushUserEntity">
+        <id column="id" property="id"/>
+        <result column="status_id" property="statusId"/>
+        <result column="rule_id" property="ruleId"/>
+        <result column="user_id" property="userId"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="ding_url" property="dingUrl"/>
+        <result column="push_type" property="pushType"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,status_id,rule_id,user_id,tenant_id,ding_url,push_type
+    </sql>
+
+    <select id="selectPageUserList" resultType="com.landleaf.bms.domain.dto.AlarmPushRulePageUserDTO">
+        SELECT
+        ta.rule_id,
+        ta.user_id,
+        tb.nickname,
+        ta.ding_url,
+        ta.push_type
+        FROM
+        tb_alarm_push_user ta
+        LEFT JOIN tb_user tb ON ta.user_id = tb."id"
+        WHERE
+        ta.deleted = 0
+        AND ta.rule_id IN
+        <foreach collection="ruleIdList" item="ruleId" open="(" close=")" separator=",">
+            #{ruleId}
+        </foreach>
+        ORDER BY ta.push_type,ta."id"
+    </select>
+
+</mapper>

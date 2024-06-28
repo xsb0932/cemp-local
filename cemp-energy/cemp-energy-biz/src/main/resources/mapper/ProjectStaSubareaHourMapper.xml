@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectStaSubareaHourMapper">
+	<resultMap id="BaseResultMap"
+               type="com.landleaf.energy.domain.entity.ProjectStaSubareaHourEntity">
+                					<id column="id" property="id"/>
+				        		        		        				<result column="kpi_code" property="kpiCode"/>
+					        		        				<result column="subarea_code" property="subareaCode"/>
+					        		        				<result column="subarea_name" property="subareaName"/>
+					        		        				<result column="biz_project_id" property="bizProjectId"/>
+					        		        				<result column="project_code" property="projectCode"/>
+					        		        				<result column="tenant_id" property="tenantId"/>
+					        		        				<result column="tenant_code" property="tenantCode"/>
+					        		        				<result column="project_name" property="projectName"/>
+					        		        				<result column="year" property="year"/>
+					        		        				<result column="month" property="month"/>
+					        		        				<result column="day" property="day"/>
+					        		        				<result column="hour" property="hour"/>
+					        		        				<result column="sta_value" property="staValue"/>
+					        		        				<result column="sta_time" property="staTime"/>
+					    </resultMap>
+
+    <sql id="base_sql_column">
+    	id,kpi_code,subarea_code,subarea_name,biz_project_id,project_code,tenant_id,tenant_code,project_name,year,month,day,hour,sta_value,sta_time
+    </sql>
+
+	<update id="updateIsDeleted">
+		update tb_project_sta_subarea_hour
+		set deleted = #{isDeleted}
+		where id in
+		<foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</update>
+</mapper>

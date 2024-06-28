@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.CategoryCatalogueMapper">
+    <select id="recursiveUpListByIds" resultType="com.landleaf.bms.domain.response.CategoryTreeListResponse">
+        with recursive tcmc0 as (
+        select tcmc.*
+        from tb_category_management_catalogue tcmc
+        where tcmc.id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and tcmc.deleted = 0
+        union all
+        select tcmc.*
+        from tcmc0,
+        tb_category_management_catalogue tcmc
+        where tcmc.id = tcmc0.parent_id and tcmc.deleted = 0
+        )
+        select distinct tcmc0.*
+        from tcmc0
+        where tcmc0.deleted = 0
+    </select>
+
+    <select id="recursiveDownIdsById" resultType="java.lang.Long">
+        with recursive tcmc0 as (select tcmc.*
+                                 from tb_category_management_catalogue tcmc
+                                 where tcmc.id = #{id}
+                                 and tcmc.deleted = 0
+                                 union all
+                                 select tcmc.*
+                                 from tcmc0,
+                                      tb_category_management_catalogue tcmc
+                                 where tcmc.parent_id = tcmc0.id and tcmc.deleted = 0)
+        select distinct tcmc0.id
+        from tcmc0
+        where tcmc0.deleted = 0
+    </select>
+
+    <select id="getLongName" resultType="java.lang.String">
+        WITH RECURSIVE tcmc0 AS (
+            -- 初始查询，找到指定地址ID的记录
+            SELECT id, name, parent_id, CAST(name AS TEXT) AS full_name
+            FROM tb_category_management_catalogue
+            WHERE id = #{id}
+            and deleted = 0
+            UNION ALL
+            -- 递归查询，连接上级地址
+            SELECT tcmc.id, tcmc.name, tcmc.parent_id, CONCAT(tcmc0.full_name, '/', tcmc.name)
+            FROM tb_category_management_catalogue tcmc
+                     INNER JOIN tcmc0 ON tcmc.id = tcmc0.parent_id and tcmc.deleted = 0)
+        SELECT full_name
+        FROM tcmc0
+        where parent_id = 0;
+    </select>
+
+    <select id="recursiveUpCatalogueByIds" resultType="com.landleaf.bms.domain.entity.CategoryCatalogueEntity">
+        with recursive tcmc0 as (
+        select tcmc.*
+        from tb_category_management_catalogue tcmc
+        where tcmc.id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and tcmc.deleted = 0
+        union all
+        select tcmc.*
+        from tcmc0,
+        tb_category_management_catalogue tcmc
+        where tcmc.id = tcmc0.parent_id
+        and tcmc.deleted = 0
+        )
+        select distinct tcmc0.*
+        from tcmc0
+        where tcmc0.deleted = 0
+        order by tcmc0.id
+    </select>
+</mapper>

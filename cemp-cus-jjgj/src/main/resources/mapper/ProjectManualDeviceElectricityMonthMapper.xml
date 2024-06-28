@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectManualDeviceElectricityMonthMapper">
+
+    <select id="searchPageData" resultType="com.landleaf.jjgj.domain.response.DeviceElectricityTabulationResponse">
+        select tpmdem.id,
+               tpmdem.biz_device_id,
+               tdi.name                             as deviceName,
+               tdp.value                            as multiplyingFactor,
+               (tpmdem.year || '-' || tpmdem.month) as time,
+               tpmdem.energymeter_epimport_total    as activeTotal,
+               tpmdem.sta_time,
+               tpmdem.open_displays_value,
+               tpmdem.close_displays_value,
+               tu.nickname                          as username,
+               tpmdem.remark
+        from tb_project_manual_device_electricity_month tpmdem
+                 left join tb_device_iot tdi on tpmdem.biz_device_id = tdi.biz_device_id and tdi.deleted = 0
+                 left join tb_device_parameter tdp
+                           on tpmdem.biz_device_id = tdp.biz_device_id and tdp.identifier = 'multiplyingFactor' and
+                              tdp.deleted = 0
+                 left join tb_user tu on tpmdem.creator = tu.id and tu.deleted = 0
+        where tpmdem.biz_device_id in
+        <foreach collection="request.deviceBizIds" open="(" item="bizId" separator="," close=")">
+            #{bizId,jdbcType=VARCHAR}
+        </foreach>
+        and to_date(year || '-' || month, 'YYYY-MM') BETWEEN to_date(#{request.startData}, 'YYYY-MM') AND to_date(#{request.endData}, 'YYYY-MM')
+        and tpmdem.deleted = 0
+    </select>
+</mapper>

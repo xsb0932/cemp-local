@@ -1,0 +1,33 @@
+package $!{package};
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+
+import java.util.Date;
+
+/**
+ * #if ("$!{table.comment}"=="")$!{entity}对象的展示信息封装#else$!{table.comment}的展示信息封装#end
+
+ *
+ * @author $!{author}
+ * @since $!{date}
+ */
+@Data
+@Schema(name = "$!{vo}", description = #if (
+    "$!{table.comment}"=="")"$!{entity}对象的展示信息封装"#else"$!{table.comment}的展示信息封装"#end)
+public class $!{vo} {
+#foreach($field in $!{table.fields})
+
+/**
+ * $!{field.columnDesc}
+ */
+    #if ("$!{field.columnDesc}" != "")
+    @Schema(description = "$!{field.columnDesc}")
+    #end
+private $!{field.columnType} $!{field.columnNameNew};
+#end
+}

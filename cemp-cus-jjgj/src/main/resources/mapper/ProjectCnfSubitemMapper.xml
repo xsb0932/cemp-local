@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectCnfSubitemMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.jjgj.domain.entity.ProjectCnfSubitemEntity">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="path" property="path"/>
+        <result column="project_id" property="projectId"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="subitem_type" property="subitemType"/>
+        <result column="kpi_type" property="kpiType"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,name,parent_id,path,project_id,tenant_id,subitem_type,kpi_type
+    </sql>
+
+    <update id="updateIsDeleted">
+        update tb_project_cnf_subitem
+        set deleted = #{isDeleted}
+        where id in
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <!--	<select id="getValidCnf" resultMap="BaseResultMap">-->
+    <!--		SELECT * FROM tb_project_cnf_subitem t1 where t1.kpi_subtype is not null-->
+    <!--		<if test="hour != null">-->
+    <!--			and sta_interval_hour = #{hour}-->
+    <!--		</if>-->
+    <!--		<if test="ymd != null">-->
+    <!--			and sta_interval_hour = #{ymd}-->
+    <!--		</if>-->
+    <!--	</select>-->
+
+    <select id="queryIdByKpiCode" resultType="java.lang.Long">
+        select b.id
+        from tb_project_cnf_subitem b
+                 left join tb_project_kpi_config c
+                           on b.kpi_subtype = c.kpi_subtype
+        where b.tenant_id = #{tenantId}
+          and c.code = #{code}
+          and b.project_id =  #{bizProjectId}
+          and b.deleted = 0
+          and c.deleted = 0 limit 1
+    </select>
+
+</mapper>

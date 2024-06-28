@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.MessageMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.bms.domain.entity.MessageEntity">
+        <id column="id" property="id"/>
+        <result column="biz_msg_id" property="bizMsgId"/>
+        <result column="msg_title" property="msgTitle"/>
+        <result column="msg_content" property="msgContent"/>
+        <result column="msg_type" property="msgType"/>
+        <result column="msg_status" property="msgStatus"/>
+        <result column="notice_type" property="noticeType"/>
+        <result column="read_count" property="readCount"/>
+        <result column="publisher" property="publisher"/>
+        <result column="publish_time" property="publishTime"/>
+        <result column="tenant_id" property="tenantId"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,biz_msg_id,msg_title,msg_content,msg_type,msg_status,notice_type,read_count,publisher,publish_time,tenant_id
+    </sql>
+
+    <select id="selectUnreadTop5Msg" resultType="com.landleaf.bms.domain.vo.MessageVO">
+        SELECT b.*,
+               tu.nickname AS userName
+        FROM tb_message_receive A
+                 LEFT JOIN tb_message b ON A.msg_id = b.
+            ID
+                 LEFT JOIN tb_user tu ON b.creator = tu."id"
+        WHERE b.msg_status = '02'
+          AND A.target_user_id = #{userId}
+          AND A.read_flag = 0
+          AND A.deleted = 0
+          AND b.deleted = 0
+        ORDER BY b.publish_time DESC LIMIT 5
+    </select>
+
+    <select id="selectUnreadCount" resultType="java.lang.Integer">
+        SELECT count(*)
+        FROM tb_message_receive A
+                 LEFT JOIN tb_message b ON A.msg_id = b.ID
+        WHERE b.msg_status = '02'
+          AND A.target_user_id = #{userId}
+          AND A.read_flag = 0
+          AND A.deleted = 0
+          AND b.deleted = 0
+    </select>
+
+    <select id="selectPageByUserInfo" resultType="com.landleaf.bms.domain.vo.MessageVO">
+        SELECT tm.*
+        ,tm.creator as userId,
+        case when tu.deleted = 0 then tu.nickname
+            else 'sys' end  userName
+        ,tt.id as tenantId, tt.name AS tenantName
+        FROM tb_message tm
+        LEFT JOIN tb_user tu ON tm.creator = tu."id"
+        LEFT JOIN tb_tenant tt ON tm.tenant_id = tt."id"
+        WHERE tm.deleted = 0
+        AND tt.deleted = 0
+        <if test="null != queryInfo.id">
+            and tm.id = #{queryInfo.id}
+        </if>
+        <if test="null != queryInfo.bizMsgId">
+            and tm.biz_msg_id = #{queryInfo.bizMsgId}
+        </if>
+        <if test="null != queryInfo.msgTitle">
+            and tm.msg_title like concat('%', #{queryInfo.msgTitle}::text, '%')
+        </if>
+        <if test="null != queryInfo.msgType">
+            and tm.msg_type = #{queryInfo.msgType}
+        </if>
+        <if test="null != queryInfo.msgStatus">
+            and tm.msg_status = #{queryInfo.msgStatus}
+        </if>
+        <if test="null == targetTenantId and null != queryInfo.tenantId">
+            and tm.tenant_id = #{queryInfo.tenantId}
+        </if>
+        <!-- targetTenantId为空，说明是平台管理员，则此时可以看所有的租户的所有状态的消息，但targetTenantId不为空且targetUserId为空时，证明是租户管理员，只可以看自己的发布的，或推送给自己的 -->
+        <if test="null!= targetTenantId and null != targetUserId">
+            and tm.msg_status = '02'
+        </if>
+        <if test="null!= targetTenantId and null == targetUserId">
+            and (tm.tenant_id = #{targetTenantId}
+            <if test="null != userId">
+                or (
+                tm.msg_status = '02' and
+                EXISTS (
+                SELECT
+                1
+                FROM
+                tb_message_receive tmr
+                WHERE
+                tm.ID = tmr.msg_id
+                AND tmr.deleted = 0
+                AND tmr.target_user_id = #{userId}
+                )
+                )
+            </if>
+            )
+        </if>
+        <if test="null!= targetTenantId and null != targetUserId">
+            AND EXISTS (
+            SELECT
+            1
+            FROM
+            tb_message_receive tmr
+            WHERE
+            tm.ID = tmr.msg_id
+            AND tmr.deleted = 0
+            <if test="null!= targetUserId">
+                AND tmr.target_user_id = #{targetUserId}
+            </if>
+            <if test="null!= targetTenantId">
+                AND tmr.target_tenant_id = #{targetTenantId}
+            </if>
+            )
+        </if>
+        ORDER BY
+        tm.create_time DESC
+    </select>
+
+    <update id="increaseReadNum">
+        update tb_message
+        set read_count = read_count + 1
+        where id = #{id}
+    </update>
+
+    <update id="updateIsDeleted">
+        update tb_message
+        set deleted = #{isDeleted}
+        where id in
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

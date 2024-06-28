@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.monitor.dal.mapper.DeviceParameterMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.monitor.domain.entity.DeviceParameterEntity">
+        <id column="id" property="id"/>
+        <result column="product_id" property="productId"/>
+        <result column="identifier" property="identifier"/>
+        <result column="function_name" property="functionName"/>
+        <result column="value" property="value"/>
+        <result column="biz_device_id" property="bizDeviceId"/>
+        <result column="tenant_id" property="tenantId"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        tenant_id
+        ,id,product_id,identifier,function_name,value,biz_device_id
+    </sql>
+
+    <update id="updateIsDeleted">
+        update tb_device_parameter
+        set deleted = #{isDeleted}
+        where id in
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="getDeviceByProjectCategoryParameter" resultType="com.landleaf.monitor.api.dto.MeterDeviceDTO">
+        SELECT DISTINCT ta.biz_device_id, ta."name", ta.biz_project_id
+        FROM tb_device_monitor ta
+        LEFT JOIN tb_device_parameter tb
+        ON ta.biz_device_id = tb.biz_device_id
+        AND tb.identifier = 'meterRead'
+        AND tb.deleted = 0
+        LEFT JOIN tb_device_parameter tc
+        ON ta.biz_device_id = tc.biz_device_id
+        AND tc.identifier = 'meterReadCycle'
+        AND tc.deleted = 0
+        WHERE ta.deleted = 0
+        AND ta.biz_project_id IN
+        <foreach collection="bizProjectIds" separator="," open="(" close=")" item="bizProjectId">
+            #{bizProjectId}
+        </foreach>
+        AND ta.biz_category_id = #{bizCategoryId}
+        AND tb."value" = #{meterRead}
+        AND (tc."value" = '0'
+        OR tc."value" = #{meterReadCycle})
+        ORDER BY ta.biz_project_id, ta.biz_device_id
+    </select>
+</mapper>

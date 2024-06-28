@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.engine.dal.mapper.RuleActionMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.engine.domain.entity.RuleActionEntity">
+        <id column="id" property="id"/>
+        <result column="action_type" property="actionType"/>
+        <result column="action_biz_prod_id" property="actionBizProdId"/>
+        <result column="action_biz_device_id" property="actionBizDeviceId"/>
+        <result column="biz_rule_id" property="bizRuleId"/>
+        <result column="alarm_code" property="alarmCode"/>
+        <result column="alarm_trigger_level" property="alarmTriggerLevel"/>
+        <result column="alarm_relapse_level" property="alarmRelapseLevel"/>
+        <result column="alarm_trigger_confirm_type" property="alarmTriggerConfirmType"/>
+        <result column="alarm_trigger_desc" property="alarmTriggerDesc"/>
+        <result column="alarm_relapse_desc" property="alarmRelapseDesc"/>
+        <result column="alarm_relapse_confirm_type" property="alarmRelapseConfirmType"/>
+        <result column="service_id" property="serviceId"/>
+        <result column="service_parameter" property="serviceParameter" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="service_sending_interval" property="serviceSendingInterval"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,action_type,action_biz_prod_id,action_biz_device_id,biz_rule_id,alarm_code,alarm_trigger_level,alarm_relapse_level,alarm_trigger_confirm_type,alarm_trigger_desc,alarm_relapse_desc,alarm_relapse_confirm_type,service_id,service_parameter,service_sending_interval
+    </sql>
+
+    <update id="updateIsDeleted">
+        update tb_rule_action
+        set deleted = #{isDeleted}
+        where id in
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

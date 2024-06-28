@@ -1,0 +1,43 @@
+package $!{package};
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import jakarta.validation.constraints.NotNull;
+
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+
+import java.util.Date;
+
+/**
+ * #if ("$!{table.comment}"=="")$!{entity}对象的新增时的参数封装#else$!{table.comment}的新增时的参数封装#end
+
+ *
+ * @author $!{author}
+ * @since $!{date}
+ */
+@Data
+@Schema(name = "$!{dto}", description = #if (
+    "$!{table.comment}"=="")"$!{entity}对象的新增时的参数封装"#else"$!{table.comment}的新增时的参数封装"#end)
+public class $!{dto} {
+#foreach($field in $!{table.fields})
+
+/**
+ * $!{field.columnDesc}
+ */
+    #if ("$!{field.columnDesc}" != "")
+    @Schema(description = "$!{field.columnDesc}")
+    #end
+    #if ("$!{field.isPriKey}" == "PRI")
+    @NotNull(groups = {$!{dto}.UpdateGroup.class}, message = "$!{field.columnDesc}不能为空")
+    #end
+private $!{field.columnType} $!{field.columnNameNew};
+#end
+
+public interface AddGroup {
+}
+
+public interface UpdateGroup {
+}
+}

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.jjgj.domain.entity.ProjectEntity">
+        <id column="id" property="id"/>
+        <result column="biz_project_id" property="bizProjectId"/>
+        <result column="name" property="name"/>
+        <result column="code" property="code"/>
+        <result column="biz_type" property="bizType"/>
+        <result column="area" property="area"/>
+        <result column="energy_type" property="energyType"/>
+        <result column="status" property="status"/>
+        <result column="director" property="director"/>
+        <result column="mobile" property="mobile"/>
+        <result column="address" property="address"/>
+        <result column="parent_biz_node_id" property="parentBizNodeId"/>
+        <result column="address_code" property="addressCode"/>
+        <result column="gd_latitude" property="gdLatitude"/>
+        <result column="gd_longitude" property="gdLongitude"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="path" property="path"/>
+        <result column="biz_node_id" property="bizNodeId"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,biz_project_id,name,code,biz_type,area,energy_type,status,director,mobile,address,parent_biz_node_id,address_code,gd_latitude,gd_longitude,tenant_id,path,biz_node_id
+    </sql>
+
+    <update id="updateIsDeleted">
+        update tb_project
+        set deleted = #{isDeleted}
+        where id in
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

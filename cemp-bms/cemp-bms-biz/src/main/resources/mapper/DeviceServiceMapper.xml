@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.DeviceServiceMapper">
+
+    <resultMap id="DeviceServiceTabulationResponse" type="com.landleaf.bms.domain.response.DeviceServiceTabulationResponse">
+        <result column="service_parameter" property="functionParameter"
+                typeHandler="com.landleaf.bms.handler.FunctionParameterListTypeHandler" />
+        <result column="response_parameter" property="responseParameter"
+                typeHandler="com.landleaf.bms.handler.FunctionParameterListTypeHandler" />
+    </resultMap>
+
+    <select id="searchDeviceServiceTabulation" resultMap="DeviceServiceTabulationResponse">
+        select id,
+               identifier,
+               function_name,
+               function_type,
+               function_category,
+               service_parameter,
+               response_parameter
+        from tb_feature_device_service
+        <where>
+            deleted = 0
+              and function_type in (
+                                    '${@com.landleaf.bms.domain.enums.FunctionTypeEnum@SYSTEM_DEFAULT.getValue()}',
+                                    '${@com.landleaf.bms.domain.enums.FunctionTypeEnum@SYSTEM_OPTIONAL.getValue()}',
+                                    '${@com.landleaf.bms.domain.enums.FunctionTypeEnum@STANDARD_OPTIONAL.getValue()}'
+                )
+            <if test="request.functionName != null and request.functionName != ''">
+                and function_name like concat('%', #{request.functionName}::text, '%')
+            </if>
+            <if test="request.identifier != null and request.identifier != ''">
+                and identifier like concat('%', #{request.identifier}::text, '%')
+            </if>
+        </where>
+        order by create_time, identifier
+    </select>
+</mapper>

@@ -1,0 +1,48 @@
+package $!{package};
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.Value;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.landleaf.pgsql.base.BaseEntity;
+
+import java.math.BigDecimal;
+
+import java.util.Date;
+import java.sql.Timestamp;
+
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+
+
+/**
+ * $!{table.comment}实体类
+ *
+ * @author $!{author}
+ * @since $!{date}
+ */
+@Data
+@EqualsAndHashCode(callSuper = false)
+@Accessors(chain = true)
+@Schema(name = "$!{entity}", description = #if ("$!{table.comment}"=="")"$!{entity}对象"#else"$!{table.comment}"#end)
+@TableName("$!{table.name}")
+public class $!{entity} extends BaseEntity{
+#foreach($field in $!{table.fields})
+
+/**
+ * $!{field.columnDesc}
+ */
+    #if ("$!{field.columnDesc}" != "")
+    @Schema(description = "$!{field.columnDesc}")
+    #end
+    #if ("$!{field.isPriKey}" == "PRI")
+    @TableId(type = IdType.AUTO)
+    #end
+private $!{field.columnType} $!{field.columnNameNew};
+#end
+}

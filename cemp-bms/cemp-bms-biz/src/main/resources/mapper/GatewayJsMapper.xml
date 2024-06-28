@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.GatewayJsMapper">
+    <insert id="insertIfNotExists">
+        INSERT INTO "tb_gateway_js" ("gateway_biz_id",
+                                     "up_js",
+                                     "down_js",
+                                     "last_up_payload",
+                                     "last_up_status",
+                                     "last_up_result",
+                                     "last_up_runtime",
+                                     "last_down_payload",
+                                     "last_down_status",
+                                     "last_down_result",
+                                     "last_down_runtime",
+                                     "tenant_id",
+                                     "creator",
+                                     "create_time",
+                                     "updater",
+                                     "update_time")
+        SELECT #{gatewayBizId},
+               #{upJs},
+               #{downJs},
+               #{lastUpPayload},
+               #{lastUpStatus},
+               #{lastUpResult},
+               #{lastUpRuntime},
+               #{lastDownPayload},
+               #{lastDownStatus},
+               #{lastDownResult},
+               #{lastDownRuntime},
+               #{tenantId},
+               #{creator},
+               NOW(),
+               #{updater},
+               NOW() WHERE
+            NOT EXISTS ( SELECT "id" FROM tb_gateway_js WHERE deleted = 0
+          AND gateway_biz_id = #{gatewayBizId} )
+    </insert>
+</mapper>

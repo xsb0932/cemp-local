@@ -1,0 +1,19 @@
+pgsql的连接，引用时需要在配置的内容中加入：
+spring:
+  datasource:
+    url: jdbc:postgresql://172.20.1.91:25432/cemp?useUnicode=true&characterEncoding=utf8&serverTimeZone=CTT&stringtype=unspecified
+    username: landleaf
+    password: landleaf@123.com
+    driver-class-name: org.postgresql.Driver
+    initialSize: 1
+    minIdle: 3
+    maxActive: 100
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 30000
+    validationQuery: select 'x'
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 20

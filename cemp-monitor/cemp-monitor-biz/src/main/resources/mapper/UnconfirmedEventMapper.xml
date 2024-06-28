@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.monitor.dal.mapper.UnconfirmedEventMapper">
+    <select id="getUnconfirmedCount" resultType="com.landleaf.monitor.domain.dto.ProjUnconfirmedAlarmCountDTO">
+        select the.project_biz_id as bizProjId, count(1) as count from tb_unconfirmed_event the
+        where the.alarm_type in ('devAlarm', 'conAlarm', 'ruleAlarm')
+        and the.deleted=0
+        and the.tenant_id=#{tenantId}
+        <if test="null != userId">
+            and the.project_biz_id in (
+            select tp.biz_project_id from tb_project tp
+            left join tb_management_node tmn on tmn.biz_node_id=tp.biz_node_id and tmn.deleted=0
+            left join tb_user_node tun on tmn."path" like concat('%',tun.path,'%') and tun.deleted=0
+            where ((tun.type = 2 and tun.node_id=tmn.id) or (tun.type=1 and tmn.type = '00'))
+            and tun.deleted=0 and tmn.deleted=0 and tp.biz_project_id is not null
+            and tun.user_id = #{userId}
+            )
+        </if>
+        group by the.project_biz_id
+    </select>
+
+    <delete id="deleteByIds">
+        delete from tb_unconfirmed_event
+        where id in
+        <foreach collection="ids" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="getUnconfirmedInfo" resultType="com.landleaf.monitor.domain.response.AlarmListResponse">
+        select the.*,
+        tdi.name as objName,
+        tp.name as projectName
+        from tb_unconfirmed_event the
+        left join tb_device_iot tdi on the.obj_id = tdi.biz_device_id and tdi.deleted=0
+        left join tb_project tp on the.project_biz_id=tp.biz_project_id and tp.deleted=0
+        where the.alarm_type in ('devAlarm', 'conAlarm', 'ruleAlarm')
+        and the.deleted=0
+        and the.tenant_id=#{tenantId}
+        <if test="null != userId">
+            and tp.biz_node_id in (
+            select tmn.biz_node_id from tb_management_node tmn
+            left join tb_user_node tun on tmn."path" like concat('%',tun.path,'%')
+            and ((tun.type = 2 and tun.node_id=tmn.id) or (tun.type=1 and tmn.type = '00'))
+            and tun.deleted=0 and tmn.deleted=0 and tp.biz_project_id is not null
+            and tun.user_id = #{userId}
+            )
+        </if>
+        <if test="null != currentId">
+            and the.id &lt; #{currentId}
+        </if>
+        order by the.id desc limit 1
+    </select>
+
+    <delete id="delEvent">
+        delete
+        from tb_unconfirmed_event
+        where event_id = #{eventId}
+    </delete>
+</mapper>

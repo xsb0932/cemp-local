@@ -1,0 +1,9 @@
+提供kafka的支持，需要添加以下配置
+spring:
+  kafka:
+    bootstrap-servers: 172.20.1.92:19094,172.20.1.92:29094,172.20.1.92:39094
+  cloud:
+    stream:
+      kafka:
+        binder:
+          autoCreateTopics: true

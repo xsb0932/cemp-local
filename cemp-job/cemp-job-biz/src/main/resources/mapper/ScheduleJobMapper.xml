@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.job.dal.mapper.ScheduleJobMapper">
+
+    <select id="queryPage" resultType="com.landleaf.job.domain.response.ScheduleJobResponse">
+        SELECT ta."id",
+        tb."id" AS tenantId,
+        tb."name" AS tenantName,
+        ta.job_name,
+        ta.statistic_type,
+        ta.last_status,
+        ta.last_time
+        FROM tb_schedule_job ta
+        LEFT JOIN tb_tenant tb ON ta.tenant_id = 0 OR ta.tenant_id = tb."id"
+        WHERE ta.deleted = 0
+        AND tb.deleted = 0
+        <if test="tenantId != null">
+            AND tb."id" = #{tenantId}
+        </if>
+        <if test="jobName != null and jobName != ''">
+            AND ta.job_name LIKE concat('%', #{jobName}::text, '%')
+        </if>
+        <if test="lastStatus != null">
+            AND ta.last_status = #{lastStatus}
+        </if>
+        <if test="statisticType != null">
+            AND ta.statistic_type = #{statisticType}
+        </if>
+        ORDER BY tb."id",ta."id"
+    </select>
+</mapper>

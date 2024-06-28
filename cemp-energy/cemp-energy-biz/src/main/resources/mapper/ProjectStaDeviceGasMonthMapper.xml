@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectStaDeviceGasMonthMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.energy.domain.entity.ProjectStaDeviceGasMonthEntity">
+        <id column="id" property="id"/>
+        <result column="biz_device_id" property="bizDeviceId"/>
+        <result column="biz_product_id" property="bizProductId"/>
+        <result column="biz_category_id" property="bizCategoryId"/>
+        <result column="biz_project_id" property="bizProjectId"/>
+        <result column="project_code" property="projectCode"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="tenant_code" property="tenantCode"/>
+        <result column="year" property="year"/>
+        <result column="month" property="month"/>
+        <result column="gasmeter_usage_total" property="gasmeterUsageTotal"/>
+        <result column="sta_time" property="staTime"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,biz_device_id,biz_product_id,biz_category_id,biz_project_id,project_code,tenant_id,tenant_code,year,month,gasmeter_usage_total,sta_time
+    </sql>
+
+    <update id="updateIsDeleted">
+        update tb_project_sta_device_gas_month
+        set deleted = #{isDeleted}
+        where id in
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="selectMeterPage" resultType="com.landleaf.energy.domain.response.GasMeterPageResponse">
+        SELECT ta."id", ta.biz_device_id, tb."name"
+        , TO_CHAR(ta.sta_time, 'YYYY-MM') AS "time", ta.gasmeter_usage_total_start AS gasStart
+        , ta.gasmeter_usage_total_end AS gasEnd, ta.gasmeter_usage_total AS gasTotal, ta.update_time
+        , CASE ta.updater
+        WHEN 0 THEN 'SYS'
+        ELSE tc."nickname"
+        END AS username, ta.remark
+        FROM tb_project_sta_device_gas_month ta
+        LEFT JOIN tb_device_monitor tb
+        ON ta.biz_device_id = tb.biz_device_id
+        AND tb.deleted = 0
+        LEFT JOIN tb_user tc ON ta.updater = tc."id"
+        WHERE ta.deleted = 0
+        AND ta.biz_device_id IN
+        <foreach collection="bizDeviceIds" item="bizDeviceId" separator="," open="(" close=")">
+            #{bizDeviceId}
+        </foreach>
+        AND ta.sta_time &gt;= #{start}
+        AND ta.sta_time &lt;= #{end}
+        ORDER BY ta.sta_time DESC, ta.biz_device_id
+    </select>
+
+    <select id="detail" resultType="com.landleaf.energy.domain.request.GasMeterDetailResponse">
+        SELECT ta."id"
+             , ta.biz_device_id
+             , tb."name"
+             , TO_CHAR(ta.sta_time, 'YYYY-MM') AS "time"
+             , ta.gasmeter_usage_total_start   AS gasStart
+             , ta.gasmeter_usage_total_end     AS gasEnd
+             , ta.gasmeter_usage_total         AS gasTotal
+             , ta.update_time
+             , CASE ta.updater
+                   WHEN 0 THEN 'SYS'
+                   ELSE tc."nickname"
+            END                                AS username
+             , ta.remark
+        FROM tb_project_sta_device_gas_month ta
+                 LEFT JOIN tb_device_monitor tb
+                           ON ta.biz_device_id = tb.biz_device_id
+                               AND tb.deleted = 0
+                 LEFT JOIN tb_user tc ON ta.updater = tc."id"
+        WHERE ta.deleted = 0
+          AND ta."id" = #{id}
+    </select>
+
+    <select id="getManualInsertData" resultType="com.landleaf.energy.domain.entity.ProjectStaDeviceGasMonthEntity">
+        SELECT ta.biz_device_id,
+               ta.biz_product_id,
+               ta.biz_category_id,
+               ta.biz_project_id,
+               tb.code AS project_code,
+               ta.tenant_id,
+               tc.code AS tenant_code
+        FROM tb_device_monitor ta
+                 LEFT JOIN tb_project tb ON ta.biz_project_id = tb.biz_project_id AND tb.deleted = 0
+                 LEFT JOIN tb_tenant tc ON ta.tenant_id = tc."id" AND tc.deleted = 0
+        WHERE ta.deleted = 0
+          AND ta.biz_device_id = #{bizDeviceId}
+    </select>
+</mapper>

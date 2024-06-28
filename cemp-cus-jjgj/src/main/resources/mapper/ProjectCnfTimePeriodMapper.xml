@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectCnfTimePeriodMapper">
+	<resultMap id="BaseResultMap"
+               type="com.landleaf.jjgj.domain.entity.ProjectCnfTimePeriodEntity">
+                					<id column="id" property="id"/>
+				        		        		        				<result column="project_id" property="projectId"/>
+					        		        				<result column="period_year" property="periodYear"/>
+					        		        				<result column="period_month" property="periodMonth"/>
+					        		        				<result column="code" property="code"/>
+					        		        				<result column="name" property="name"/>
+					        		        				<result column="time_begin" property="timeBegin"/>
+					        		        				<result column="time_end" property="timeEnd"/>
+					        		        				<result column="price" property="price"/>
+					        		        				<result column="tenant_id" property="tenantId"/>
+					    </resultMap>
+
+    <sql id="base_sql_column">
+    	id,project_id,period_year,period_month,code,name,time_begin,time_end,price,tenant_id
+    </sql>
+
+	<update id="updateIsDeleted">
+		update tb_project_cnf_time_period
+		set deleted = #{isDeleted}
+		where id in
+		<foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</update>
+</mapper>

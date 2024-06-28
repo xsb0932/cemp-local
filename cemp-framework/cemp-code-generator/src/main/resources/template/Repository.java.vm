@@ -1,0 +1,26 @@
+package $!{package};
+
+import java.util.List;
+import org.apache.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+import $!{entityPackage}.$!{entity};
+
+/**
+ * #if ("$!{table.comment}"=="")$!{entity}对象的数据库操作句柄#else$!{table.comment}的数据库操作句柄#end
+ 
+ *
+ * @author $!{author}
+ * @since $!{date}
+ */
+public interface $!{repository} extends BaseMapper<$!{entity}> {
+	/**
+	 * 根据id的列表，修改对应信息的is_deleted字段
+	 * 
+	 * @param ids
+	 *            id的列表
+	 * @param isDeleted
+	 *            修改后的值
+	 */
+	void updateIsDeleted(@Param("ids") List<$!{keyType}> ids, @Param("isDeleted") Integer isDeleted);
+}

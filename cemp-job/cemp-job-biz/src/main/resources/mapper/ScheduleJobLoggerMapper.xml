@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.job.dal.mapper.ScheduleJobLoggerMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.job.domain.entity.ScheduleJobLoggerEntity">
+        <id column="id" property="id"/>
+        <result column="job_id" property="jobId"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="project_ids" property="projectIds"/>
+        <result column="project_names" property="projectNames"/>
+        <result column="status" property="status"/>
+        <result column="exec_type" property="execType"/>
+        <result column="exec_time" property="execTime"/>
+        <result column="exec_user" property="execUser"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,job_id,tenant_id,project_ids,project_names,status,exec_type,exec_time,exec_user
+    </sql>
+
+    <select id="queryPage" resultType="com.landleaf.job.domain.response.ScheduleLoggerPageResponse">
+        SELECT ta.id,
+        ta.exec_time,
+        tb.job_name,
+        ta.project_names,
+        ta.exec_type,
+        ta.status
+        FROM tb_schedule_job_logger ta
+        LEFT JOIN tb_schedule_job tb ON ta.job_id = tb."id"
+        WHERE ta.deleted = 0
+        AND ta.tenant_id = #{request.tenantId}
+        AND ta.job_id = #{request.jobId}
+        <if test="request.projectName != null and request.projectName != ''">
+            AND ta.project_names LIKE concat('%', #{request.projectName}::text, '%')
+        </if>
+        <if test="request.status != null">
+            AND ta.status = #{request.status}
+        </if>
+        <if test="request.startTime != null and request.endTime != null">
+            AND ta.exec_time &gt;= #{request.startTime}
+            AND ta.exec_time &lt;= #{request.endTime}
+        </if>
+        ORDER BY ta.exec_time DESC
+    </select>
+
+</mapper>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.monitor.dal.mapper.ViewMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.monitor.domain.entity.ViewEntity">
+        <id column="id" property="id"/>
+        <result column="biz_project_id" property="bizProjectId"/>
+        <result column="name" property="name"/>
+        <result column="view_type" property="viewType"/>
+        <result column="status" property="status"/>
+        <result column="url" property="url"/>
+        <result column="view_url" property="viewUrl"/>
+        <result column="custom_type" property="customType"/>
+        <result column="creator" property="creator"/>
+        <result column="create_time" property="createTime"/>
+        <result column="updater" property="updater"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="deleted" property="deleted"/>
+        <result column="tenant_id" property="tenantId"/>
+    </resultMap>
+
+    <update id="changeStatus">
+        UPDATE tb_view
+        SET status      = abs(status - 1),
+            updater     = #{userId},
+            update_time = now()
+        WHERE "id" = #{viewId}
+    </update>
+
+    <select id="selectPage" resultType="com.landleaf.monitor.domain.response.ViewPageResponse">
+        SELECT tv."id",
+        tp."name" AS project_name,
+        tv.biz_project_id,
+        tv.view_type,
+        tv."name",
+        tv.status,
+        CASE tv.creator
+        WHEN 0 THEN 'SYS'
+        ELSE tu."nickname"
+        END AS creator_name,
+        tv.url,
+        tv.custom_type,
+        tv.create_time,
+        tv.sort
+        FROM tb_view tv
+        LEFT JOIN tb_project tp ON tv.biz_project_id = tp.biz_project_id AND tv.deleted = 0
+        LEFT JOIN tb_user tu ON tv.creator = tu."id"
+        WHERE tv.deleted = 0
+        AND tv.biz_project_id IN
+        <foreach collection="bizProjectIds" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        <if test="projectName != null and projectName != ''">
+            AND tp."name" LIKE '%' || #{projectName} || '%'
+        </if>
+        <if test="viewName != null and viewName != ''">
+            AND tv."name" LIKE '%' || #{viewName} || '%'
+        </if>
+        ORDER BY tv.create_time DESC;
+    </select>
+
+    <select id="selectInfo" resultType="com.landleaf.monitor.domain.response.ViewInfoResponse">
+        SELECT tv."id",
+               tp."name" AS project_name,
+               tv.biz_project_id,
+               tv.view_type,
+               tv."name",
+               tv.status,
+               tv.url,
+               tv.custom_type,
+               tv.view_url,
+               tv.sort
+        FROM tb_view tv
+                 LEFT JOIN tb_project tp ON tv.biz_project_id = tp.biz_project_id AND tv.deleted = 0
+        WHERE tv.deleted = 0
+          AND tv."id" = #{viewId}
+    </select>
+
+</mapper>

@@ -1,0 +1,9 @@
+mqtt的工具类，引用时需要在配置的内容中加入：
+
+mqtt:
+  enable: true
+  server-url: tcp://47.117.47.4:11883
+  username: admin
+  password: public
+  client-id: client_id
+  send-client-max-size: 16

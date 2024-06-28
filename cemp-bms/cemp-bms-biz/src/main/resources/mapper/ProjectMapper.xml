@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.ProjectMapper">
+    <resultMap id="projectListResponse" type="com.landleaf.bms.api.dto.ProjectListResponse">
+        <result property="energyType" column="energy_type"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result property="addressCode" column="address_code"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result property="energySubSystem" column="energy_sub_system"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+    </resultMap>
+    <resultMap id="projectDetailsResponse" type="com.landleaf.bms.api.dto.ProjectDetailsResponse">
+        <result property="energyType" column="energy_type"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result property="energySubSystem" column="energy_sub_system"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result property="addressCode" column="address_code"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+    </resultMap>
+    <select id="recursiveDownCurrentUserListByBizNodeId"
+            resultType="com.landleaf.bms.api.dto.ProjectListResponse">
+        with recursive tmn0 as (select tmn.*
+                                from tb_management_node tmn
+                                where tmn.biz_node_id = #{bizNodeId}
+                                  and tmn.deleted = 0
+                                union all
+                                select tmn.*
+                                from tmn0,
+                                     tb_management_node tmn
+                                where tmn.parent_biz_node_id = tmn0.biz_node_id
+                                  and tmn.deleted = 0)
+        select tp.*
+        from tmn0,
+             tb_user_node tun,
+             tb_project tp
+        where tmn0.id = tun.node_id
+          and tp.biz_node_id = tmn0.biz_node_id
+          and tmn0.type = #{type}
+          and tun.user_id = #{userId}
+          and tp.deleted = 0
+          and tmn0.deleted = 0
+          and tun.deleted = 0
+        order by tmn0.sort;
+    </select>
+
+    <select id="recursiveDownCurrentUserListByNodeId" resultType="com.landleaf.bms.api.dto.ProjectListResponse">
+        with recursive tmn0 as (select tmn.*
+        from tb_management_node tmn
+        where tmn.id in
+        <foreach collection="nodeIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and tmn.deleted=0
+        union all
+        select tmn.*
+        from tmn0,
+        tb_management_node tmn
+        where tmn.parent_biz_node_id = tmn0.biz_node_id and tmn.deleted=0)
+        select tp.*
+        from tmn0,
+        tb_project tp
+        where tp.biz_node_id = tmn0.biz_node_id
+        and tmn0.type = #{type}
+        and tmn0.deleted = 0
+        and tp.deleted = 0
+        order by tmn0.sort;
+    </select>
+
+    <select id="getProjectBizIdsByProjectNodeIds" resultType="java.lang.String">
+        select tp.biz_project_id
+        from tb_project tp
+        left join tb_management_node tmn on tp.biz_node_id = tmn.biz_node_id
+        where tp.deleted = 0
+        and tmn.deleted = 0
+        and tmn.id in
+        <foreach collection="nodeIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getProjectListByProjectNodeIds" resultType="com.landleaf.bms.api.dto.UserProjectDTO">
+        select tp.id, tp.biz_project_id, tp.name
+        from tb_project tp
+        left join tb_management_node tmn on tp.biz_node_id = tmn.biz_node_id
+        where tp.deleted = 0
+        and tmn.deleted = 0
+        and tmn.id in
+        <foreach collection="nodeIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="recursiveDownBizListByNodeIds" resultType="java.lang.String">
+        with recursive tmn0 as (select tmn.*
+        from tb_management_node tmn
+        where tmn.id in
+        <foreach collection="nodeIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and tmn.deleted=0
+        union all
+        select tmn.*
+        from tmn0,
+        tb_management_node tmn
+        where tmn.parent_biz_node_id = tmn0.biz_node_id and tmn.deleted=0)
+        select tp.biz_project_id
+        from tmn0,
+        tb_project tp
+        where tp.biz_node_id = tmn0.biz_node_id
+        and tmn0.type = #{type}
+        and tmn0.deleted = 0
+        and tp.deleted = 0
+        order by tmn0.sort;
+    </select>
+
+
+    <select id="recursiveDownProjectListByNodeIds" resultType="com.landleaf.bms.api.dto.UserProjectDTO">
+        with recursive tmn0 as (select tmn.*
+        from tb_management_node tmn
+        where tmn.id in
+        <foreach collection="nodeIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and tmn.deleted=0
+        union all
+        select tmn.*
+        from tmn0,
+        tb_management_node tmn
+        where tmn.parent_biz_node_id = tmn0.biz_node_id and tmn.deleted=0)
+        select tp.id, tp.biz_project_id, tp.name
+        from tmn0,
+        tb_project tp
+        where tp.biz_node_id = tmn0.biz_node_id
+        and tmn0.type = #{type}
+        and tmn0.deleted = 0
+        and tp.deleted = 0
+        order by tmn0.sort;
+    </select>
+
+    <select id="selectPageList" resultMap="projectListResponse">
+        select *
+        from tb_project
+        where deleted = 0
+        AND biz_project_id IN
+        <foreach collection="projectBizIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        <if test="request.name != null and request.name != ''">
+            and name like concat('%', #{request.name}::text, '%')
+        </if>
+        <if test="request.code != null and request.code != ''">
+            and code like concat('%', #{request.code}::text, '%')
+        </if>
+        <if test="request.bizType != null and request.bizType != ''">
+            and biz_type = #{request.bizType}
+        </if>
+        <if test="request.status != null">
+            and status = #{request.status}
+        </if>
+    </select>
+
+    <select id="selectProjectDetails" resultMap="projectDetailsResponse">
+        select *
+        from tb_project
+        where deleted = 0
+          and biz_project_id = #{bizProjectId}
+    </select>
+
+    <select id="getProjectsCity" resultType="com.landleaf.bms.api.dto.ProjectCityDTO">
+        SELECT ta.biz_project_id, tb.address_name AS city, tb.lng, tb.lat
+        FROM (SELECT json_array_elements_text(address_code)::TEXT AS address_code, biz_project_id
+        FROM tb_project
+        WHERE deleted = 0
+        AND biz_project_id IN
+        <foreach collection="bizProjectIdList" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        ) ta
+        INNER JOIN tb_address tb
+        ON ta.address_code = tb.address_code
+        AND tb.address_type = 2
+        AND tb.deleted = 0;
+    </select>
+
+    <select id="getAreaProjectDetails" resultType="com.landleaf.bms.api.dto.ProjectAreaProjectsDetailResponse">
+        SELECT DISTINCT biz_project_id AS project_id, area AS project_area, NAME AS project_name, NULL AS consumption
+        FROM tb_project
+        WHERE biz_project_id IN
+        <foreach collection="bizProjectIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

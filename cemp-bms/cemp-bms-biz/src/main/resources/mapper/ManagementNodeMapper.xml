@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.ManagementNodeMapper">
+    <select id="recursiveUpListByIds" resultType="com.landleaf.bms.domain.response.NodeProjectTreeResponse">
+        with recursive tmn0 as (
+        select tmn.*
+        from tb_management_node tmn
+        where tmn.id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and tmn.deleted = 0
+        union all
+        select tmn.*
+        from tmn0,
+        tb_management_node tmn
+        where tmn.biz_node_id = tmn0.parent_biz_node_id
+        and tmn.deleted = 0
+        )
+        select distinct tmn0.*,
+        tmn0.id as node_id,
+        tp.id as project_id,
+        tp.biz_project_id as project_biz_id
+        from tmn0
+        left join tb_project tp on tmn0.biz_node_id = tp.biz_node_id and tp.deleted = 0
+        where tmn0.deleted = 0
+        order by tmn0.sort
+    </select>
+
+    <select id="recursiveDownListByIds" resultType="com.landleaf.bms.domain.entity.ManagementNodeEntity">
+        with recursive tmn0 as (
+        select tmn.*
+        from tb_management_node tmn
+        where tmn.id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and tmn.deleted = 0
+        union all
+        select tmn.*
+        from tmn0,
+        tb_management_node tmn
+        where tmn.parent_biz_node_id = tmn0.biz_node_id
+        and tmn.deleted = 0
+        )
+        select tmn0.*
+        from tmn0
+        where tmn0.deleted = 0
+        order by tmn0.sort;
+    </select>
+
+    <select id="recursiveUpListByIdsFeign" resultType="com.landleaf.bms.api.dto.UserManageNodeResponse">
+        with recursive tmn0 as (
+        select tmn.*
+        from tb_management_node tmn
+        where tmn.id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and tmn.deleted = 0
+        union all
+        select tmn.*
+        from tmn0,
+        tb_management_node tmn
+        where tmn.biz_node_id = tmn0.parent_biz_node_id
+        and tmn.deleted = 0
+        )
+        select distinct tmn0.id as node_id,
+        tmn0.biz_node_id,
+        tmn0.parent_biz_node_id,
+        tmn0.type as node_type,
+        tmn0.name as node_name,
+        tmn0.sort
+        from tmn0
+        where tmn0.deleted = 0
+        order by tmn0.sort
+    </select>
+
+    <select id="getManagementNodeList" resultType="com.landleaf.bms.domain.response.ManagementNodeListResponse">
+        select tmn.*, tp.area
+        from tb_management_node tmn
+                 left join tb_project tp on tmn.biz_node_id = tp.biz_node_id and tp.deleted = 0
+        where tmn.deleted = 0
+          and tmn.tenant_id = #{tenantId}
+    </select>
+
+    <select id="getTenantManagementNodeList"
+            resultType="com.landleaf.bms.domain.response.TenantManagementNodeListResponse">
+        select tmn.*
+        from tb_management_node tmn
+        where tmn.deleted = 0
+          and tmn.tenant_id = #{tenantId}
+    </select>
+
+    <select id="selectMaxSort" resultType="int">
+        select COALESCE(MAX(sort), 0)
+        from tb_management_node
+        where deleted = 0
+          and tenant_id = #{tenantId};
+    </select>
+
+    <select id="getLongName" resultType="java.lang.String">
+        WITH RECURSIVE tbn0 AS (
+            -- 初始查询，找到指定地址ID的记录
+            SELECT biz_node_id, name, parent_biz_node_id, CAST(name AS TEXT) AS full_name
+            FROM tb_management_node
+            WHERE biz_node_id = #{bizNodeId}
+            and deleted = 0
+            UNION ALL
+            -- 递归查询，连接上级地址
+            SELECT tbn.biz_node_id, tbn.name, tbn.parent_biz_node_id, CONCAT(tbn0.full_name, '/', tbn.name)
+            FROM tb_management_node tbn
+                     INNER JOIN tbn0 ON tbn.biz_node_id = tbn0.parent_biz_node_id and tbn.deleted = 0)
+        SELECT full_name
+        FROM tbn0
+        where parent_biz_node_id = 'N00000000';
+    </select>
+
+    <select id="recursiveUpManagementNodeTreeDTOByIds"
+            resultType="com.landleaf.bms.domain.dto.ManagementNodeTreeDTO">
+        WITH RECURSIVE tmn0 AS (
+        SELECT
+        tmn.*
+        FROM
+        tb_management_node tmn
+        WHERE
+        tmn.ID IN
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and tmn.deleted = 0
+        UNION ALL
+        SELECT
+        tmn.*
+        FROM
+        tmn0,
+        tb_management_node tmn
+        WHERE
+        tmn.biz_node_id = tmn0.parent_biz_node_id
+        and tmn.deleted = 0
+        )
+        SELECT DISTINCT
+        tmn0.*,
+        tp.id AS project_id,
+        tp.biz_project_id
+        FROM
+        tmn0
+        LEFT JOIN tb_project tp ON tmn0.biz_node_id = tp.biz_node_id
+        AND tmn0.type = '00'
+        AND tp.deleted = 0
+        WHERE
+        tmn0.deleted = 0
+        ORDER BY
+        tmn0.sort
+    </select>
+
+    <select id="recursiveDownBizProjectIdsByBizNodeId" resultType="java.lang.String">
+        WITH RECURSIVE tmn0 AS (SELECT tmn.*
+                                FROM tb_management_node tmn
+                                WHERE tmn.biz_node_id = #{bizNodeId}
+                                  and tmn.deleted = 0
+                                UNION ALL
+                                SELECT tmn.*
+                                FROM tmn0,
+                                     tb_management_node tmn
+                                WHERE tmn.parent_biz_node_id = tmn0.biz_node_id and tmn.deleted = 0)
+        SELECT tp.biz_project_id
+        FROM tmn0
+                 INNER JOIN tb_project tp
+                            ON tmn0.biz_node_id = tp.biz_node_id
+                                AND tmn0.type = '00'
+                                AND tp.deleted = 0
+        WHERE tmn0.deleted = 0;
+    </select>
+</mapper>

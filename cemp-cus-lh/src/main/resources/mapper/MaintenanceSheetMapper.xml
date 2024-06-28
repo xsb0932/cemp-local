@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.lh.dal.mapper.MaintenanceSheetMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.lh.domain.entity.MaintenanceSheetEntity">
+        <id column="id" property="id"/>
+        <result column="biz_project_id" property="bizProjectId"/>
+        <result column="maintenance_year" property="maintenanceYear"/>
+        <result column="maintenance_month" property="maintenanceMonth"/>
+        <result column="maintenance_date" property="maintenanceDate"/>
+        <result column="maintenance_type" property="maintenanceType"/>
+        <result column="room" property="room"/>
+        <result column="content" property="content"/>
+        <result column="tenant_id" property="tenantId"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,biz_project_id,maintenance_year,maintenance_month,maintenance_date,maintenance_type,room,content,tenant_id
+    </sql>
+
+    <select id="maintenancePageQuery" resultType="com.landleaf.lh.domain.response.MaintenancePageResponse">
+        SELECT ta."id"
+        , ta.biz_project_id
+        , tb."name" AS projectName
+        , ta.room
+        , to_char( maintenance_year_month, 'yyyy-MM' ) AS yearMonth
+        , ta.maintenance_date
+        , ta.maintenance_type
+        , ta."content"
+        FROM lh_maintenance_sheet ta
+        LEFT JOIN tb_project tb
+        ON ta.biz_project_id = tb.biz_project_id
+        AND tb.deleted = 0
+        WHERE ta.deleted = 0
+        AND ta.maintenance_year_month &gt;= #{yearMonthStart}
+        AND ta.maintenance_year_month &lt;= #{yearMonthEnd}
+        AND ta.biz_project_id IN
+        <foreach collection="bizProjectIdList" separator="," open="(" close=")" item="bizProjectId">
+            #{bizProjectId}
+        </foreach>
+        <if test="maintenanceType != null and maintenanceType.size() > 0">
+            AND ta.maintenance_type IN
+            <foreach collection="maintenanceType" item="type" open="(" close=")" separator=",">
+                #{type}
+            </foreach>
+        </if>
+        ORDER BY ta.maintenance_date DESC, ta."id" ASC
+    </select>
+
+    <select id="info" resultType="com.landleaf.lh.domain.response.MaintenanceInfoResponse">
+        SELECT ta."id",
+               ta.biz_project_id,
+               tb."name" AS projectName,
+               ta.room,
+               ta.maintenance_year::TEXT || '-' || ta.maintenance_month::TEXT AS yearMonth, ta.maintenance_date,
+               ta.maintenance_type,
+               ta."content"
+        FROM lh_maintenance_sheet ta
+                 LEFT JOIN tb_project tb ON ta.biz_project_id = tb.biz_project_id AND tb.deleted = 0
+        WHERE ta.deleted = 0
+          AND ta."id" = #{id}
+    </select>
+
+    <select id="selectExportList" resultType="com.landleaf.lh.domain.dto.MaintenanceExportDTO">
+        SELECT tb."name" AS projectName
+        , ta.room
+        , ta.maintenance_year::TEXT || '-' || ta.maintenance_month::TEXT AS yearMonth
+        , ta.maintenance_date
+        , ta.maintenance_type
+        , ta."content"
+        FROM lh_maintenance_sheet ta
+        LEFT JOIN tb_project tb
+        ON ta.biz_project_id = tb.biz_project_id
+        AND tb.deleted = 0
+        WHERE ta.deleted = 0
+        AND ta.maintenance_year_month &gt;= #{yearMonthStart}
+        AND ta.maintenance_year_month &lt;= #{yearMonthEnd}
+        AND ta.biz_project_id IN
+        <foreach collection="bizProjectIdList" separator="," open="(" close=")" item="bizProjectId">
+            #{bizProjectId}
+        </foreach>
+        <if test="maintenanceType != null and maintenanceType.size() > 0">
+            AND ta.maintenance_type IN
+            <foreach collection="maintenanceType" item="type" open="(" close=")" separator=",">
+                #{type}
+            </foreach>
+        </if>
+        ORDER BY ta.maintenance_date DESC, ta."id" ASC
+    </select>
+
+    <select id="selectMonthMaintenanceAverage"
+            resultType="com.landleaf.lh.domain.dto.MonthMaintenanceAverageDTO">
+        SELECT maintenance_month,
+               ROUND(COUNT(1) :: NUMERIC / COUNT ( DISTINCT biz_project_id ) :: NUMERIC, 1) AS avg_num
+        FROM lh_maintenance_sheet
+        WHERE deleted = 0
+          AND maintenance_year_month &gt;= #{start}
+          AND maintenance_year_month &lt;= #{end}
+        GROUP BY maintenance_month
+    </select>
+
+    <select id="listMaintenanceSort" resultType="com.landleaf.lh.domain.response.LhMaintenanceSortResponse">
+        SELECT ta."name", COALESCE(tb.total, 0) AS total
+        FROM tb_project ta
+                 LEFT JOIN (SELECT biz_project_id, COUNT(1) AS total
+                            FROM lh_maintenance_sheet
+                            WHERE deleted = 0
+                              AND maintenance_year_month = #{month}
+                            GROUP BY biz_project_id) tb
+                           ON ta.biz_project_id = tb.biz_project_id
+        WHERE ta.deleted = 0
+        ORDER BY COALESCE(tb.total, 0) DESC, ta."id" ASC LIMIT 6
+    </select>
+
+    <select id="getMaintenanceOrder"
+            resultType="com.landleaf.lh.domain.response.LhAreaMaintenanceOrderResponse">
+        SELECT t2.NAME AS project_name, t2.area, t1.maintenance_num
+        , COALESCE(t1.maintenance_num, 0) AS maintenanceNumSort
+        FROM tb_project t2
+        LEFT JOIN (
+        SELECT biz_project_id, COUNT(*) AS maintenance_num
+        FROM lh_maintenance_sheet
+        WHERE biz_project_id IN
+        <foreach collection="bizProjectIdList" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+        AND maintenance_year = #{year}
+        AND maintenance_month = #{month}
+        GROUP BY biz_project_id
+        ) t1
+        ON t1.biz_project_id = t2.biz_project_id
+        WHERE t2.biz_project_id IN
+        <foreach collection="bizProjectIdList" separator="," item="id" open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getAllTypeNum" resultType="com.landleaf.lh.domain.response.LhMaintenanceGropDataResponse">
+        SELECT maintenance_type AS TYPE, COUNT(*) AS num
+        FROM lh_maintenance_sheet t1
+        WHERE biz_project_id IN
+        <foreach collection="bizProjectIdList" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        AND t1.maintenance_year = #{year}
+        AND t1.maintenance_month = #{month}
+        GROUP BY t1.maintenance_type
+        ORDER BY COUNT(*) DESC
+    </select>
+
+</mapper>

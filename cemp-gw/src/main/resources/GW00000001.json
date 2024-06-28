@@ -1,0 +1,12 @@
+{
+  "upTopics": {
+    "/test/up/001": "up1",
+    "/test/up/002": "up2"
+  },
+  "downTopics": {
+    "/test/down/001": "down1",
+    "/test/down/002": "down2"
+  },
+  "upJs": "function uphandlefunction(topic,payload) {\n\n    let result = {};\n\n  result.a = payload.a;\n  result.b = payload.b;\n\n  return result;}",
+  "downJs": "function downhandlefunction(cmd) {    let a = 1;\n    let b = 2;\n    return {\"cmd\":cmd}\n}"
+}

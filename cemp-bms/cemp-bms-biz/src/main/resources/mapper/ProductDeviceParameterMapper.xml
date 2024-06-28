@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.ProductDeviceParameterMapper">
+    <resultMap id="productDeviceParameterListResponse"
+               type="com.landleaf.bms.api.dto.ProductDeviceParameterListResponse">
+        <result column="value_description" property="valueDescription"
+                typeHandler="com.landleaf.bms.handler.ValueDescriptionListTypeHandler"/>
+    </resultMap>
+
+    <select id="pageQuery" resultMap="productDeviceParameterListResponse">
+        select *
+        from tb_product_device_parameter
+        <where>
+            deleted = 0
+            and product_id = #{request.productId}
+            <if test="request.functionName != null and request.functionName != ''">
+                and function_name like concat('%', #{request.functionName}::text, '%')
+            </if>
+            <if test="request.identifier != null and request.identifier != ''">
+                and identifier like concat('%', #{request.identifier}::text, '%')
+            </if>
+        </where>
+        order by create_time, identifier
+    </select>
+
+    <resultMap id="deviceManagerMonitorProperty" type="com.landleaf.bms.domain.response.DeviceManagerMonitorProperty">
+        <result column="value_description" property="valueDescription"
+                typeHandler="com.landleaf.pgsql.handler.ValueDescriptionListTypeHandler"/>
+    </resultMap>
+
+    <select id="selectDeviceManagerMonitorPropertyListById"
+            resultMap="deviceManagerMonitorProperty">
+        SELECT *
+        FROM tb_product_device_parameter
+        WHERE deleted = 0
+          AND product_id = #{productId}
+        ORDER BY create_time, identifier;
+    </select>
+</mapper>

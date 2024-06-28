@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.jjgj.dal.mapper.ProjectPlannedGasMapper">
+	<resultMap id="BaseResultMap"
+               type="com.landleaf.jjgj.domain.entity.ProjectPlannedGasEntity">
+                					<id column="id" property="id"/>
+				        		        		        				<result column="project_biz_id" property="projectBizId"/>
+					        		        				<result column="year" property="year"/>
+					        		        				<result column="month" property="month"/>
+					        		        				<result column="plan_gas_consumption" property="planGasConsumption"/>
+					        		        				<result column="tenant_id" property="tenantId"/>
+					    </resultMap>
+
+    <sql id="base_sql_column">
+    	id,project_biz_id,year,month,plan_gas_consumption,tenant_id
+    </sql>
+	
+	<update id="updateIsDeleted">
+		update tb_project_planned_gas
+		set deleted = #{isDeleted}
+		where id in
+		<foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</update>
+</mapper>

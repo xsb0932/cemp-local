@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.oauth.dal.mapper.UserRoleEntityMapper">
+    <select id="getByUserIdAndRoleType" resultType="com.landleaf.oauth.domain.entity.UserRoleEntity">
+        select *
+        from tb_user_role tur
+                 left join tb_role tr on tur.role_id = tr.id
+        where tr.status = 0
+          and tur.user_id = #{userId}
+          and tr.type = #{roleType}
+          and tur.deleted = 0
+          and tr.deleted = 0
+    </select>
+    <select id="getByTenantIdAndRoleType" resultType="com.landleaf.oauth.domain.entity.UserRoleEntity">
+        select *
+        from tb_user_role tur
+                 left join tb_role tr on tur.role_id = tr.id
+        where tr.status = 0
+          and tur.tenant_id = #{tenant_id}
+          and tr.type = #{roleType}
+          and tur.deleted = 0
+          and tr.deleted = 0
+    </select>
+
+    <select id="searchUsers" resultType="com.landleaf.oauth.domain.entity.UserRoleEntity">
+        select id,
+               user_id,
+               role_id,
+               deleted,
+               tenant_id
+        from tb_user_role
+        where user_id = #{userId}
+    </select>
+
+    <update id="recoverDeletedUserRole">
+        update tb_user_role
+        set deleted = 0
+        where id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper>

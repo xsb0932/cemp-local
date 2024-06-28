@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.oauth.dal.mapper.MenuSystemMapper">
+
+<select id="recursionMenuByPermission" resultType="com.landleaf.oauth.domain.entity.MenuSystemEntity">
+    WITH RECURSIVE menus AS (SELECT id,
+                                    module_id,
+                                    module_code,
+                                    name,
+                                    permission,
+                                    type,
+                                    sort,
+                                    path,
+                                    parent_id,
+                                    icon,
+                                    remark,
+                                    open_with
+                             FROM tb_menu_system
+    WHERE permission in
+    <foreach collection="permissions" open="(" separator="," item="permission" close=")">
+        #{permission}
+    </foreach>
+    UNION ALL
+    SELECT tm.id,
+           tm.module_id,
+           tm.module_code,
+           tm.name,
+           tm.permission,
+           tm.type,
+           tm.sort,
+           tm.path,
+           tm.parent_id,
+           tm.icon,
+           tm.remark,
+           tm.open_with
+    FROM tb_menu_system tm
+             JOIN menus m
+                  ON tm.id = m.parent_id
+    )
+    SELECT distinct(id),
+                   module_id,
+                   module_code,
+                   name,
+                   permission,
+                   type,
+                   sort,
+                   path,
+                   parent_id,
+                   icon,
+                   remark,
+                   open_with
+    FROM menus;
+</select>
+</mapper>

@@ -1,0 +1,127 @@
+package $!{package};
+
+import java.util.List;
+
+import jakarta.validation.Valid;
+import com.landleaf.web.util.ValidatorUtil;
+
+import com.landleaf.comm.constance.CommonConstant;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
+import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import com.landleaf.comm.base.pojo.Response;
+
+import $!{dtoPackage}.$!{addDto};
+import $!{dtoPackage}.$!{queryDto};
+import $!{entityPackage}.$!{entity};
+import $!{voPackage}.$!{vo};
+import $!{wrapperPackage}.$!{wrapper};
+import $!{servicePackage}.$!{service};
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+
+/**
+ * #if ("$!{table.comment}"=="")$!{entity}对象的控制层接口定义#else$!{table.comment}的控制层接口定义#end
+
+ *
+ * @author $!{author}
+ * @since $!{date}
+ */
+@Slf4j
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/$!{urlPrefix}")
+@Tag(name = "#if ("$!{table.comment}"=="")$!{entity}对象的控制层接口定义#else$!{table.comment}的控制层接口定义#end", description = "#if (
+    "$!{table.comment}"=="")$!{entity}对象的控制层接口定义#else$!{table.comment}的控制层接口定义#end")
+public class $!{controller} {
+/**
+ * #if ("$!{table.comment}"=="")$!{entity}对象的相关逻辑操作句柄#else$!{table.comment}的相关逻辑操作句柄#end
+
+ */
+private final $!{service} $!{serviceImplName};
+
+/**
+ * 新增或修改#if ("$!{table.comment}"=="")$!{entity}对象#else$!{table.comment}#end数据
+ *
+ * @param addInfo
+ *            新增或修改的对象实体封装
+ * @return 成功后返回保存的实体信息
+ */
+@PostMapping("/save")
+@Operation(summary = "新增", description = "传入$!{addDto}")
+public Response<$!{addDto}> save(@RequestBody @Valid $!{addDto} addInfo){
+        if(null==addInfo.$!{getPriKey}){
+        ValidatorUtil.validate(addInfo, $!{addDto}.AddGroup.class);
+        addInfo= $!{serviceImplName}.save(addInfo);
+        }else{
+        ValidatorUtil.validate(addInfo, $!{addDto}.AddGroup.class);
+    $!{serviceImplName}.update(addInfo);
+        }
+        return Response.success(addInfo);
+        }
+
+/**
+ * 根据编号，删除#if ("$!{table.comment}"=="")$!{entity}对象#else$!{table.comment}#end数据（逻辑删除）
+ *
+ * @param ids
+ *            要删除的ids的编号
+ * @return 成功返回true
+ */
+@PostMapping("/remove")
+        @Operation(summary = "根据编号，删除#if (
+    "$!{table.comment}"=="")$!{entity}对象#else$!{table.comment}#end信息", description = "传入ids,多个以逗号分隔")
+public Response<Boolean> update(@Parameter(description = "需要删除的id，多个以逗号分隔") @RequestParam("id")  String ids){
+    $!{serviceImplName}.updateIsDeleted(ids,CommonConstant.DELETED_FLAG_DELETED);
+        return Response.success(true);
+        }
+
+/**
+ * 根据编号，查询#if ("$!{table.comment}"=="")$!{entity}对象#else$!{table.comment}#end详情数据
+ *
+ * @param id
+ *            要查询的id编号
+ * @return 成功返回true
+ */
+@GetMapping("/detail")
+        @Operation(summary = "根据id查询#if (
+    "$!{table.comment}"=="")$!{entity}对象#else$!{table.comment}#end详情", description = "传入ids,多个以逗号分隔")
+public Response<$!{vo}> get(@Parameter(description = "需要查询的id") @RequestParam("id")  Long id){
+    $!{entity} entity= $!{serviceImplName}.selectById(id);
+        return Response.success($!{wrapper}.builder().entity2VO(entity));
+        }
+
+/**
+ * 查询#if ("$!{table.comment}"=="")$!{entity}对象#else$!{table.comment}#end列表数据
+ *
+ * @param queryInfo
+ *            查询参数封装
+ * @return 返回数据的列表
+ */
+@GetMapping("/list")
+        @Operation(summary ="查询#if (
+    "$!{table.comment}"=="")$!{entity}对象#else$!{table.comment}#end列表数据", description = "")
+public Response<List<$!{vo}>>list($!{queryDto} queryInfo){
+        List<$!{entity}> cdList= $!{serviceImplName}.list(queryInfo);
+        return Response.success($!{wrapper}.builder().listEntity2VO(cdList));
+        }
+
+/**
+ * 分页查询#if ("$!{table.comment}"=="")$!{entity}对象#else$!{table.comment}#end列表数据
+ *
+ * @param queryInfo
+ *            查询参数封装
+ * @return 返回数据的列表
+ */
+@GetMapping("/page")
+        @Operation(summary ="分页查询#if (
+    "$!{table.comment}"=="")$!{entity}对象#else$!{table.comment}#end列表数据", description = "")
+public Response<PageDTO<$!{vo}>>page($!{queryDto} queryInfo){
+        IPage<$!{entity}> page= $!{serviceImplName}.page(queryInfo);
+        return Response.success($!{wrapper}.builder().pageEntity2VO(page));
+        }
+        }

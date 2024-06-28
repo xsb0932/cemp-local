@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.ProductMapper">
+    <select id="pageQueryRepo" resultType="com.landleaf.bms.domain.response.RepoProductResponse">
+        select tp.*
+        from tb_product tp
+        where tp.deleted = 0
+        and tp.tenant_id is null
+        and tp.category_id in
+        <foreach collection="categoryBizIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="request.name != null and request.name != ''">
+            and tp.name like '%' || #{request.name} || '%'
+        </if>
+        <if test="request.status != null">
+            and tp.status = #{request.status}
+        </if>
+    </select>
+
+    <select id="pageQueryCustom" resultType="com.landleaf.bms.domain.response.ProductResponse">
+        select tp.*, case when tp.tenant_id is null then 1 else 0 end as isRepo
+        from tb_product tp
+        where tp.deleted = 0
+        and (tp.id in
+        (select product_id from tb_product_ref tpr where tpr.tenant_id = #{tenantId} and tpr.deleted = 0)
+        or tp.tenant_id = #{tenantId})
+        and tp.category_id in
+        <foreach collection="categoryBizIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="request.name != null and request.name != ''">
+            and tp.name like '%' || #{request.name} || '%'
+        </if>
+        <if test="request.status != null">
+            and tp.status = #{request.status}
+        </if>
+        order by tp.biz_id desc
+    </select>
+
+    <select id="selectTenantProductList" resultType="com.landleaf.bms.domain.entity.ProductEntity">
+        SELECT ta.*
+        FROM tb_product ta
+                 LEFT JOIN tb_product_ref tb ON ta.id = tb.product_id
+            AND tb.deleted = 0
+        WHERE ta.deleted = 0
+          AND (ta.tenant_id = #{tenantId} OR tb.tenant_id = #{tenantId})
+        ORDER BY ta.id;
+    </select>
+</mapper>

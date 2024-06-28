@@ -1,0 +1,7 @@
+influx的连接，引用时需要在配置的内容中加入：
+spring:
+  influx:
+    url: "http://172.20.1.91:18086"
+    token: "landleaf-super-secret-auth-token"
+    bucket: "landleaf-bucket"
+    org: "landleaf"

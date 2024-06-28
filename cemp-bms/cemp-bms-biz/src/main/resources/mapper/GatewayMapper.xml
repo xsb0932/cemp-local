@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.GatewayMapper">
+    <resultMap id="GatewayListResponse"
+               type="com.landleaf.bms.domain.response.GatewayListResponse">
+        <result column="product_biz_ids" property="productBizIds"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="up_topic" property="upTopic"
+                typeHandler="com.landleaf.bms.handler.TopicListTypeHandler"/>
+        <result column="down_topic" property="downTopic"
+                typeHandler="com.landleaf.bms.handler.TopicListTypeHandler"/>
+    </resultMap>
+
+    <resultMap id="GatewayDetailsResponse"
+               type="com.landleaf.bms.domain.response.GatewayDetailsResponse">
+        <result column="product_biz_ids" property="productBizIds"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="up_topic" property="upTopic"
+                typeHandler="com.landleaf.bms.handler.TopicListTypeHandler"/>
+        <result column="down_topic" property="downTopic"
+                typeHandler="com.landleaf.bms.handler.TopicListTypeHandler"/>
+    </resultMap>
+
+    <resultMap id="GatewayEntityMap"
+               type="com.landleaf.bms.domain.entity.GatewayEntity">
+        <result column="product_biz_ids" property="productBizIds"
+                typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="up_topic" property="upTopic"
+                typeHandler="com.landleaf.bms.handler.TopicListTypeHandler"/>
+        <result column="down_topic" property="downTopic"
+                typeHandler="com.landleaf.bms.handler.TopicListTypeHandler"/>
+    </resultMap>
+
+    <select id="pageQuery" resultMap="GatewayListResponse">
+        select tg.*
+        from tb_gateway tg
+        left join tb_product tp on tg.project_biz_id = tp.biz_id
+        where tg.deleted = 0
+        and tg.project_biz_id in
+        <foreach collection="projectBizIds" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        <if test="request.name != null and request.name != ''">
+            and tg.name like '%' || #{request.name} || '%'
+        </if>
+        <if test="request.status != null and request.status != ''">
+            and tg.status = #{request.status}
+        </if>
+    </select>
+
+    <select id="getDetailByBizId" resultMap="GatewayDetailsResponse">
+        SELECT tg.*
+        FROM tb_gateway tg
+        WHERE tg.deleted = 0
+          AND tg.biz_id = #{bizId}
+    </select>
+
+    <select id="selectByBizId" resultMap="GatewayEntityMap">
+        SELECT tg.*
+        FROM tb_gateway tg
+        WHERE tg.deleted = 0
+          AND tg.biz_id = #{bizId}
+    </select>
+
+    <select id="getById" resultMap="GatewayEntityMap">
+        SELECT tg.*
+        FROM tb_gateway tg
+        WHERE tg.deleted = 0
+          AND tg.id = #{id}
+    </select>
+</mapper>

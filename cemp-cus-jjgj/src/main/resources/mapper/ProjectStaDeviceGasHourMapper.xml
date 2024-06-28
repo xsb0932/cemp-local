@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectStaDeviceGasHourMapper">
+	<resultMap id="BaseResultMap"
+               type="com.landleaf.jjgj.domain.entity.ProjectStaDeviceGasHourEntity">
+                					<id column="id" property="id"/>
+				        		        		        				<result column="biz_device_id" property="bizDeviceId"/>
+					        		        				<result column="biz_product_id" property="bizProductId"/>
+					        		        				<result column="biz_category_id" property="bizCategoryId"/>
+					        		        				<result column="biz_project_id" property="bizProjectId"/>
+					        		        				<result column="project_code" property="projectCode"/>
+					        		        				<result column="tenant_id" property="tenantId"/>
+					        		        				<result column="tenant_code" property="tenantCode"/>
+					        		        				<result column="year" property="year"/>
+					        		        				<result column="month" property="month"/>
+					        		        				<result column="day" property="day"/>
+					        		        				<result column="hour" property="hour"/>
+					        		        				<result column="gasmeter_usage_total" property="gasmeterUsageTotal"/>
+					        		        				<result column="sta_time" property="staTime"/>
+					    </resultMap>
+
+    <sql id="base_sql_column">
+    	id,biz_device_id,biz_product_id,biz_category_id,biz_project_id,project_code,tenant_id,tenant_code,year,month,day,hour,gasmeter_usage_total,sta_time
+    </sql>
+
+	<update id="updateIsDeleted">
+		update tb_project_sta_device_gas_hour
+		set deleted = #{isDeleted}
+		where id in
+		<foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</update>
+</mapper>

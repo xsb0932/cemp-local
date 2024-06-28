@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.ProductAlarmConfMapper">
+
+    <select id="pageQuery" resultType="com.landleaf.bms.api.dto.ProductAlarmConfListResponse">
+        select tp.*
+        from tb_product_alarm_conf tp
+        where tp.deleted = 0
+            and tp.product_id = #{request.productId}
+        <if test="request.alarmCode != null and request.alarmCode != ''">
+            and tp.alarm_code like '%' || #{request.alarmCode} || '%'
+        </if>
+        <if test="request.alarmTriggerLevel != null">
+            and tp.alarm_trigger_level = #{request.alarmTriggerLevel}
+        </if>
+    </select>
+</mapper>

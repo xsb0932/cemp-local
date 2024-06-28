@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectStaDeviceElectricityHourMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.energy.domain.entity.ProjectStaDeviceElectricityHourEntity">
+        <id column="id" property="id"/>
+        <result column="biz_device_id" property="bizDeviceId"/>
+        <result column="biz_product_id" property="bizProductId"/>
+        <result column="biz_category_id" property="bizCategoryId"/>
+        <result column="biz_project_id" property="bizProjectId"/>
+        <result column="project_code" property="projectCode"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="tenant_code" property="tenantCode"/>
+        <result column="year" property="year"/>
+        <result column="month" property="month"/>
+        <result column="day" property="day"/>
+        <result column="hour" property="hour"/>
+        <result column="energymeter_epimport_total" property="energymeterEpimportTotal"/>
+        <result column="sta_time" property="staTime"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,biz_device_id,biz_product_id,biz_category_id,biz_project_id,project_code,tenant_id,tenant_code,year,month,day,hour,energymeter_epimport_total,sta_time
+    </sql>
+
+    <update id="updateIsDeleted">
+        update tb_project_sta_device_electricity_hour
+        set deleted = #{isDeleted}
+        where id in
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="getDailyEle" resultType="com.landleaf.energy.domain.entity.ProjectStaDeviceElectricityHourEntity">
+        select t1.hour,sum(t1.energymeter_epimport_total) as energymeter_epimport_total from
+        tb_project_sta_device_electricity_hour t1
+        where t1.deleted = 0 and t1.biz_device_id in
+        <foreach collection="devices" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and t1.sta_time &gt;= #{begin} and t1.sta_time &lt; #{end} group by t1.hour;
+    </select>
+
+    <select id="getEpimportYear" resultType="com.landleaf.energy.domain.entity.ProjectStaDeviceElectricityHourEntity">
+        select t1.biz_device_id,sum( t1.energymeter_epimport_total) as energymeter_epimport_total
+        from tb_project_sta_device_electricity_hour t1 where t1.biz_device_id in
+        <foreach collection="devices" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and t1.deleted = '0' and t1.year = #{year} group by t1.biz_device_id;
+    </select>
+
+    <select id="getEpexportYear" resultType="com.landleaf.energy.domain.entity.ProjectStaDeviceElectricityHourEntity">
+        select t1.biz_device_id,sum( t1.energymeter_epexport_total) as energymeter_epexport_total
+        from tb_project_sta_device_electricity_hour t1 where t1.biz_device_id in
+        <foreach collection="devices" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and t1.deleted = '0' and t1.year = #{year} group by t1.biz_device_id;
+    </select>
+
+    <select id="searchPageData" resultType="com.landleaf.energy.domain.response.DeviceElectricityTabulationResponse">
+        SELECT tpsder.id
+        , tpsder.biz_device_id
+        , tdi.name AS deviceName
+        , tdp.value AS multiplyingFactor
+        , to_char(tpsder.sta_time, 'YYYY-MM-DD HH24:MI:SS') AS "time"
+        , tpsder.energymeter_epimport_total AS activeTotal
+        , tpsder.create_time AS sta_time
+        , tpsder.energymeter_epimport_start AS open_displays_value
+        , tpsder.energymeter_epimport_end AS close_displays_value
+        , CASE tpsder.updater
+        WHEN 0 THEN 'SYS'
+        ELSE tu.nickname
+        END AS username
+        , tpsder.remark
+        FROM tb_project_sta_device_electricity_hour tpsder
+        LEFT JOIN tb_device_monitor tdi
+        ON tpsder.biz_device_id = tdi.biz_device_id
+        AND tdi.deleted = 0
+        LEFT JOIN tb_device_parameter tdp
+        ON tpsder.biz_device_id = tdp.biz_device_id
+        AND tdp.identifier = 'multiplyingFactor'
+        AND tdp.deleted = 0
+        LEFT JOIN tb_user tu
+        ON tpsder.updater = tu.id
+        AND tu.deleted = 0
+        WHERE
+        tpsder.deleted = 0
+        AND tpsder.biz_device_id IN
+        <foreach collection="request.bizDeviceIds" item="bizDeviceId" separator="," open="(" close=")">
+            #{bizDeviceId}
+        </foreach>
+        AND tpsder.sta_time &gt;= to_timestamp(#{request.start}, 'YYYY-MM-DD HH24')
+        AND tpsder.sta_time &lt;= to_timestamp(#{request.end}, 'YYYY-MM-DD HH24')
+        ORDER BY tpsder.sta_time DESC, tpsder.biz_device_id
+    </select>
+
+    <select id="getManualInsertData"
+            resultType="com.landleaf.energy.domain.entity.ProjectStaDeviceElectricityHourEntity">
+        SELECT ta.biz_device_id,
+               ta.biz_product_id,
+               ta.biz_category_id,
+               ta.biz_project_id,
+               tb.code AS project_code,
+               ta.tenant_id,
+               tc.code AS tenant_code
+        FROM tb_device_monitor ta
+                 LEFT JOIN tb_project tb ON ta.biz_project_id = tb.biz_project_id AND tb.deleted = 0
+                 LEFT JOIN tb_tenant tc ON ta.tenant_id = tc."id" AND tc.deleted = 0
+        WHERE ta.deleted = 0
+          AND ta.biz_device_id = #{bizDeviceId}
+    </select>
+</mapper>

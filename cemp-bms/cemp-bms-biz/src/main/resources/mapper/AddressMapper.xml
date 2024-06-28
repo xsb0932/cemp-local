@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.AddressMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.bms.domain.entity.AddressEntity">
+        <id column="id" property="id"/>
+        <result column="address_code" property="addressCode"/>
+        <result column="address_name" property="addressName"/>
+        <result column="address_type" property="addressType"/>
+        <result column="parent_code" property="parentCode"/>
+        <result column="weather_code" property="weatherCode"/>
+        <result column="weather_name" property="weatherName"/>
+        <result column="creator" property="creator"/>
+        <result column="create_time" property="createTime"/>
+        <result column="updater" property="updater"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,address_code,address_name,address_type,parent_code,weather_code,weather_name,creator,create_time,updater,update_time,deleted
+    </sql>
+
+</mapper>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.monitor.dal.mapper.CurrentAlarmMapper">
+    <select id="selectPageList" resultType="com.landleaf.monitor.domain.response.AlarmListResponse">
+        select tca.*,
+        tp.name as projectName,
+        tac.is_confirm as isConfirm,
+        case
+        when tu.id is not null then tu.nickname
+        else 'sys' end confirmUser,
+        tac.confirm_time as confirmTime,
+        tac.remark as confirmRemark,
+        tdi.name as objName
+        from tb_current_alarm tca
+        left join tb_project tp on tp.biz_project_id = tca.project_biz_id
+        left join tb_alarm_confirm tac on tca.event_id = tac.event_id and tac.deleted = 0
+        left join tb_device_iot tdi on tca.obj_id = tdi.biz_device_id
+        left join tb_user tu on tac.confirm_user = tu.id and tu.deleted = 0
+        where tca.deleted = 0
+        and tp.deleted = 0
+        and tdi.deleted = 0
+        and
+        tca.project_biz_id in
+        <foreach collection="bizProjIds" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        <if test="request.alarmCode != null and request.alarmCode != ''">
+            and tca.alarm_code like '%' || #{request.alarmCode} || '%'
+        </if>
+        <if test="request.alarmType != null and request.alarmType != ''">
+            and tca.alarm_type = #{request.alarmType}
+        </if>
+        <if test="request.alarmLevel != null and request.alarmLevel != ''">
+            and tca.alarm_level = #{request.alarmLevel}
+        </if>
+        <if test="request.objName != null and request.objName != ''">
+            and tdi.name like '%' || #{request.objName} || '%'
+        </if>
+        order by tca.create_time desc
+    </select>
+
+    <delete id="deleteAlarmById">
+        delete
+        from tb_current_alarm
+        where id = #{alarmId}
+    </delete>
+
+    <select id="selectConfirmedCountByCode" resultType="com.landleaf.monitor.domain.dto.DevConfirmedAlarmCountDTO">
+        select a.obj_id as bizDeviceId, count(1) as count
+        from tb_current_alarm a
+        left join tb_alarm_confirm b on a.event_id = b.event_id
+        where a.deleted = 0
+        and b.deleted = 0
+        and alarm_type != 'conAlarm'
+        and b.id is not null
+        and a.obj_id in
+        <foreach collection="bizDeviceIds" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        <if test="null != codePrefix">
+            and
+            <foreach collection="codePrefix" item="item" open="(" close=")" separator="or">
+                a.alarm_code like concat('%',#{item}::text,'%')
+            </foreach>
+        </if>
+        group by a.obj_id
+    </select>
+</mapper>

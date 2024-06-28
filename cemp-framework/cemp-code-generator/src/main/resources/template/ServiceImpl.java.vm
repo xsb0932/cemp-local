@@ -1,0 +1,181 @@
+package $!{package};
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+import java.time.LocalDateTime;
+
+import com.landleaf.comm.constance.CommonConstant;
+import com.landleaf.comm.constance.ErrorCodeEnumConst;
+import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.util.StringUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
+import com.landleaf.comm.exception.BusinessException;
+import $!{daoPackage}.$!{repository};
+import $!{dtoPackage}.$!{addDto};
+import $!{dtoPackage}.$!{queryDto};
+import $!{entityPackage}.$!{entity};
+import $!{servicePackage}.$!{service};
+
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * #if ("$!{table.comment}"=="")$!{entity}对象的业务逻辑接口实现#else$!{table.comment}的业务逻辑接口实现#end
+
+ *
+ * @author $!{author}
+ * @since $!{date}
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class $!{serviceImpl} extends ServiceImpl<$!{repository}, $!{entity}> implements $!{service} {
+
+/**
+ * 数据库操作句柄
+ */
+private final $!{repository} $!{daoName};
+
+/**
+ * {@inheritDoc}
+ */
+@Override
+@Transactional(rollbackFor = Exception.class)
+public $!{addDto} save($!{addDto} addInfo) {
+    $!{entity} entity = new $!{entity}();
+    BeanUtil.copyProperties(addInfo, entity);
+    if (null == entity.getDeleted()) {
+        entity.setDeleted(CommonConstant.DELETED_FLAG_NOT_DELETE);
+    }
+    if (null == entity.getCreateTime()) {
+        entity.setCreateTime(LocalDateTime.now());
+    }
+    int effectNum = $!{daoName}.insert(entity);
+    if (0 == effectNum) {
+        // 插入失败
+        throw new BusinessException(ErrorCodeEnumConst.DATA_INSERT_ERROR.getCode(), ErrorCodeEnumConst.DATA_INSERT_ERROR.getMessage());
+    }
+    BeanUtil.copyProperties(entity, addInfo);
+    return addInfo;
+}
+
+/**
+ * {@inheritDoc}
+ */
+@Override
+@Transactional(rollbackFor = Exception.class)
+public void update($!{addDto} updateInfo) {
+    $!{entity} entity = $!{daoName}.selectById(updateInfo.$!{getPriKey});
+    if (null == entity) {
+        // 修改失败
+        throw new BusinessException(ErrorCodeEnumConst.NULL_VALUE_ERROR.getCode(), ErrorCodeEnumConst.NULL_VALUE_ERROR.getMessage());
+    }
+    BeanUtil.copyProperties(updateInfo, entity, CopyOptions.create().setIgnoreNullValue(true).setIgnoreError(true));
+
+    $!{daoName}.updateById(entity);
+}
+
+/**
+ * {@inheritDoc}
+ */
+@Override
+@Transactional(rollbackFor = Exception.class)
+public void updateIsDeleted(String ids, Integer isDeleted) {
+    String[] idArray = ids.split(",");
+    List<$!{keyType}> idList = new ArrayList<$!{keyType}>();
+    for (String id : idArray) {
+        idList.add($!{keyType}.valueOf(id));
+    }
+    $!{daoName}.updateIsDeleted(idList, isDeleted);
+}
+
+/**
+ * {@inheritDoc}
+ */
+@Override
+public $!{entity} selectById($!{keyType} id) {
+    $!{entity} entity = $!{daoName}.selectById(id);
+    if (null == entity) {
+        return null;
+    }
+    return CommonConstant.DELETED_FLAG_NOT_DELETE == entity.getDeleted().intValue() ? entity : null;
+
+}
+
+/**
+ * {@inheritDoc}
+ */
+@Override
+public List<$!{entity}> list($!{queryDto} queryInfo) {
+    return $!{daoName}.selectList(getCondition(queryInfo));
+}
+
+/**
+ * {@inheritDoc}
+ */
+@Override
+public IPage<$!{entity}> page($!{queryDto} queryInfo) {
+    IPage<$!{entity}> page = new Page<>(queryInfo.getPageNo(), queryInfo.getPageSize());
+    page = $!{daoName}.selectPage(page, getCondition(queryInfo));
+    return page;
+}
+
+/**
+ * 封装查询的请求参数
+ *
+ * @param queryInfo
+ *            请求参数
+ * @return sql查询参数封装
+ */
+private LambdaQueryWrapper<$!{entity}> getCondition($!{queryDto} queryInfo) {
+    LambdaQueryWrapper<$!{entity}> wrapper = new QueryWrapper<$!{entity}>().lambda().eq($!{entity}::getDeleted, CommonConstant.
+    DELETED_FLAG_NOT_DELETE);
+
+    // 开始时间
+    if (!StringUtils.isEmpty(queryInfo.getStartTime())) {
+        long startTimeMillion = 0L;
+        try {
+            startTimeMillion = DateUtils
+                    .parseDate(queryInfo.getStartTime() + " 00:00:00")
+                    .getTime();
+        } catch (Exception e) {
+            log.error("查询参数错误，startTime不符合格式{}", queryInfo.getStartTime());
+            throw new BusinessException(ErrorCodeEnumConst.DATE_FORMAT_ERROR.getCode(), ErrorCodeEnumConst.DATE_FORMAT_ERROR.getMessage());
+        }
+        wrapper.le($!{entity}::getCreateTime, new Timestamp(startTimeMillion));
+    }
+
+    // 结束时间
+    if (!StringUtils.isEmpty(queryInfo.getEndTime())) {
+        long endTimeMillion = 0L;
+        try {
+            endTimeMillion = DateUtils
+                    .parseDate(queryInfo.getEndTime() + " 23:59:59")
+                    .getTime();
+        } catch (Exception e) {
+            log.error("查询参数错误，endTime不符合格式{}", queryInfo.getEndTime());
+            throw new BusinessException(ErrorCodeEnumConst.DATE_FORMAT_ERROR.getCode(), ErrorCodeEnumConst.DATE_FORMAT_ERROR.getMessage());
+        }
+        wrapper.ge($!{entity}::getCreateTime, new Timestamp(endTimeMillion));
+    }
+    #foreach($item in $!{conditionList})
+        // $!{item.desc}
+        if ($!{item.condition}) {
+            wrapper.$!{item.mybatisType}($!{entity}::get$!{item.mybatisKey}, $!{item.value});
+        }
+    #end
+    wrapper.orderByDesc($!{entity}::getUpdateTime);
+    return wrapper;
+}
+}

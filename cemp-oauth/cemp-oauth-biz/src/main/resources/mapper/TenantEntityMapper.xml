@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.oauth.dal.mapper.TenantEntityMapper">
+    <resultMap id="BaseResultMap" type="com.landleaf.oauth.domain.entity.TenantEntity">
+        <!--@mbg.generated-->
+        <!--@Table tb_tenant-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="code" jdbcType="VARCHAR" property="code"/>
+        <result column="status" jdbcType="SMALLINT" property="status"/>
+        <result column="social_credit_code" jdbcType="VARCHAR" property="socialCreditCode"/>
+        <result column="business_license" jdbcType="VARCHAR" property="businessLicense"/>
+        <result column="logo" jdbcType="VARCHAR" property="logo"/>
+        <result column="address" jdbcType="VARCHAR" property="address"/>
+        <result column="admin_id" jdbcType="BIGINT" property="adminId"/>
+        <result column="remark" jdbcType="VARCHAR" property="remark"/>
+        <result column="creator" jdbcType="BIGINT" property="creator"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="updater" jdbcType="BIGINT" property="updater"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="deleted" jdbcType="SMALLINT" property="deleted"/>
+        <result column="biz_tenant_id" jdbcType="VARCHAR" property="bizTenantId"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id,
+        "name",
+        code,
+        "status",
+        social_credit_code,
+        business_license,
+        logo,
+        address,
+        admin_id,
+        remark,
+        creator,
+        create_time,
+        updater,
+        update_time,
+        deleted,
+        biz_tenant_id
+    </sql>
+
+    <select id="searchTenantTabulation" resultType="com.landleaf.oauth.domain.response.TenantTabulationResponse">
+        select tt.id            as id,
+               tt.name          as name,
+               tt.code          as code,
+               tt.status        as status,
+               tt.address       as address,
+               tu.nickname      as adminNickName,
+               tu.email         as adminEmail,
+               tu.mobile        as adminMobile,
+               tt.biz_tenant_id as bizTenantId
+        from tb_tenant tt
+                 left join tb_user tu on tt.admin_id = tu.id
+        <where>
+            <if test="request.name != null and request.name != ''">
+                tt.name like concat('%', #{request.name}::text, '%')
+            </if>
+            <if test="request.status != null">
+                and tt.status = #{request.status}
+            </if>
+            <if test="request.adminEmail != null and request.adminEmail != ''">
+                and tu.email like concat('%', #{request.adminEmail}::text, '%')
+            </if>
+            <if test="request.adminMobile != null and request.adminMobile != ''">
+                and tu.mobile like concat('%', #{request.adminMobile}::text, '%')
+            </if>
+            <if test="request.adminNickName != null and request.adminNickName != ''">
+                and tu.nickname like concat('%', #{request.adminNickName}::text, '%')
+            </if>
+            and tt.deleted = 0
+            and tu.deleted = 0
+        </where>
+    </select>
+
+    <select id="searchTenantBasicInfo" resultType="com.landleaf.oauth.domain.response.TenantInfoResponse">
+        select tt.id                 as id,
+               tt.name               as name,
+               tt.code               as code,
+               tt.status             as status,
+               tt.address            as address,
+               tt.logo               as logo,
+               tt.social_credit_code as socialCreditCode,
+               tt.business_license   as businessLicense,
+               tu.nickname           as adminNickName,
+               tu.username           as adminUserName,
+               tu.email              as adminEmail,
+               tu.mobile             as adminMobile,
+               tt.remark             as remark,
+               tt.biz_tenant_id      as bizTenantId,
+               tt.reporting_cycle    as reportingCycle
+        from tb_tenant tt
+                 left join tb_user tu on tt.admin_id = tu.id
+        where tt.id = #{tenantId}
+          and tt.deleted = 0
+          and tu.deleted = 0
+    </select>
+</mapper>

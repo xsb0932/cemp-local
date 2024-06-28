@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectStaDeviceElectricityDayMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.jjgj.domain.entity.ProjectStaDeviceElectricityDayEntity">
+        <id column="id" property="id"/>
+        <result column="biz_device_id" property="bizDeviceId"/>
+        <result column="biz_product_id" property="bizProductId"/>
+        <result column="biz_category_id" property="bizCategoryId"/>
+        <result column="biz_project_id" property="bizProjectId"/>
+        <result column="project_code" property="projectCode"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="tenant_code" property="tenantCode"/>
+        <result column="year" property="year"/>
+        <result column="month" property="month"/>
+        <result column="day" property="day"/>
+        <result column="energymeter_epimport_total" property="energymeterEpimportTotal"/>
+        <result column="sta_time" property="staTime"/>
+    </resultMap>
+
+
+    <update id="updateIsDeleted">
+        update tb_project_sta_device_electricity_day
+        set deleted = #{isDeleted}
+        where id in
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="searchPageData" resultType="com.landleaf.jjgj.domain.response.DeviceElectricityTabulationResponse">
+        select tpsded.id,
+               tpsded.biz_device_id,
+               tdi.name                                                  as deviceName,
+               tdp.value                                                 as multiplyingFactor,
+               (tpsded.year || '-' || tpsded.month || '-' || tpsded.day) as time,
+               tpsded.energymeter_epimport_total                         as activeTotal,
+               tpsded.sta_time,
+               tpsded.energymeter_epimport_start                         as open_displays_value,
+               tpsded.energymeter_epimport_end                           as close_displays_value,
+               tu.nickname                                               as username,
+               tpsded.remark
+        from tb_project_sta_device_electricity_day tpsded
+                 left join tb_device_iot tdi on tpsded.biz_device_id = tdi.biz_device_id and tdi.deleted = 0
+                 left join tb_device_parameter tdp
+                           on tpsded.biz_device_id = tdp.biz_device_id and tdp.identifier = 'multiplyingFactor' and
+                              tdp.deleted = 0
+                 left join tb_user tu on tpsded.creator = tu.id and tu.deleted = 0
+        where tpsded.biz_device_id in
+        <foreach collection="request.deviceBizIds" open="(" item="bizId" separator="," close=")">
+            #{bizId,jdbcType=VARCHAR}
+        </foreach>
+        and to_date(year || '-' || month || '-' || day, 'YYYY-MM-DD') BETWEEN to_date(#{request.startData}::text, 'YYYY-MM-DD') AND to_date(#{request.endData}::text, 'YYYY-MM-DD')
+        and tpsded.deleted = 0
+    </select>
+</mapper>

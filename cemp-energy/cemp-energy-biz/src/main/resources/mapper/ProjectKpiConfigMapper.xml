@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectKpiConfigMapper">
+	<resultMap id="BaseResultMap"
+               type="com.landleaf.energy.domain.entity.ProjectKpiConfigEntity">
+                					<id column="id" property="id"/>
+				        		        		        				<result column="code" property="code"/>
+					        		        				<result column="name" property="name"/>
+					        		        				<result column="kpi_type" property="kpiType"/>
+					        		        				<result column="kpi_subtype" property="kpiSubtype"/>
+					        		        				<result column="sta_interval_hour" property="staIntervalHour"/>
+					        		        				<result column="sta_interval_ymd" property="staIntervalYmd"/>
+					        		        				<result column="tenant_id" property="tenantId"/>
+					        		        				<result column="unit" property="unit"/>
+					    </resultMap>
+
+    <sql id="base_sql_column">
+    	id,code,name,kpi_type,kpi_subtype,sta_interval_hour,sta_interval_ymd,tenant_id,unit
+    </sql>
+
+	<update id="updateIsDeleted">
+		update tb_project_kpi_config
+		set deleted = #{isDeleted}
+		where id in
+		<foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</update>
+
+	<select id="getAllKpisByProject" resultType="com.landleaf.energy.domain.entity.ProjectKpiConfigEntity">
+		select t1.* from tb_project_kpi_config t1 join tb_project_cnf_subitem t2 on t1.kpi_subtype = t2.kpi_subtype
+		where t2.project_id =  #{bizProjectId}
+		and t1.deleted=0 and t2.deleted=0
+		<if test="isHour != null">
+			and t1.sta_interval_hour = '1'
+		</if>
+		<if test="isYMD != null">
+			and t1.sta_interval_ymd = '1'
+		</if>
+		union select * from tb_project_kpi_config where kpi_subtype like 'area%' and deleted=0
+
+	</select>
+</mapper>

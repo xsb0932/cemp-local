@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectSubitemDeviceMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.jjgj.domain.entity.ProjectSubitemDeviceEntity">
+        <id column="id" property="id"/>
+        <result column="subitem_id" property="subitemId"/>
+        <result column="device_id" property="deviceId"/>
+        <result column="device_name" property="deviceName"/>
+        <result column="compute_tag" property="computeTag"/>
+        <result column="tenant_id" property="tenantId"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,subitem_id,device_id,device_name,compute_tag,tenant_id
+    </sql>
+
+    <update id="updateIsDeleted">
+        update tb_project_subitem_device
+        set deleted = #{isDeleted}
+        where id in
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="queryAllDeviceByKpiCode" resultMap="BaseResultMap">
+        select a.id,
+               a.subitem_id,
+               a.device_id,
+               a.device_name,
+               a.compute_tag,
+               a.tenant_id
+        from tb_project_subitem_device a
+                 left join tb_project_cnf_subitem b
+                           on a.subitem_id = b.id
+                 left join tb_project_kpi_config c
+                           on b.kpi_subtype = c.kpi_subtype
+        where a.tenant_id = #{tenantId} and b.tenant_id = #{tenantId}
+          and c.code = #{code}
+          and b.project_id = #{bizProjectId}
+          and a.deleted = 0
+          and b.deleted = 0
+          and c.deleted = 0
+    </select>
+
+    <update id="rmAllDeviceByKpiCode">
+        update
+            tb_project_subitem_device
+        set deleted = 1,
+            updater = #{loginUserId}
+        where deleted = 0
+          and subitem_id in (
+            select b.id
+            from tb_project_cnf_subitem b
+                     left join tb_project_kpi_config c
+                               on b.kpi_subtype = c.kpi_subtype
+            where c.code = #{code}
+              and b.project_id = #{bizProjectId}
+              and b.deleted = 0
+              and c.deleted = 0
+        )
+    </update>
+
+    <select id="listAllValid" resultType="com.landleaf.jjgj.domain.entity.ProjectSubitemDeviceEntity">
+        select t1.* from tb_project_subitem_device t1
+        join tb_device_monitor t2 on t1.device_id = t2.biz_device_id
+        where t2.deleted = 0 and t1.deleted = 0 and  t1.subitem_id in
+        <foreach collection="subitemIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+
+    </select>
+</mapper>

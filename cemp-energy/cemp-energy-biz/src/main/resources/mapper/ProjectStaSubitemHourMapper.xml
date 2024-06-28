@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectStaSubitemHourMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.energy.domain.entity.ProjectStaSubitemHourEntity">
+        <id column="id" property="id"/>
+        <result column="biz_project_id" property="bizProjectId"/>
+        <result column="project_code" property="projectCode"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="tenant_code" property="tenantCode"/>
+        <result column="project_name" property="projectName"/>
+        <result column="year" property="year"/>
+        <result column="month" property="month"/>
+        <result column="day" property="day"/>
+        <result column="hour" property="hour"/>
+        <result column="project_gas_usage_total" property="projectGasUsageTotal"/>
+        <result column="project_water_usage_total" property="projectWaterUsageTotal"/>
+        <result column="project_electricity_energyUsage_total" property="projectElectricityEnergyusageTotal"/>
+        <result column="project_electricity_subElevatorEnergy_total"
+                property="projectElectricitySubelevatorenergyTotal"/>
+        <result column="project_electricity_subGuestRoomEnergy_total"
+                property="projectElectricitySubguestroomenergyTotal"/>
+        <result column="project_electricity_subHeatingWaterEnergy_total"
+                property="projectElectricitySubheatingwaterenergyTotal"/>
+        <result column="project_electricity_subHAVCEnergy_total" property="projectElectricitySubhavcenergyTotal"/>
+        <result column="project_electricity_subOtherType_total" property="projectElectricitySubothertypeTotal"/>
+        <result column="project_electricity_subWaterSupplyEnergy_total"
+                property="projectElectricitySubwatersupplyenergyTotal"/>
+        <result column="sta_time" property="staTime"/>
+    </resultMap>
+
+    <update id="updateIsDeleted">
+        update tb_project_sta_subitem_hour
+        set deleted = #{isDeleted}
+        where id in
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.oauth.dal.mapper.MenuEntityMapper">
+    <resultMap id="BaseResultMap" type="com.landleaf.oauth.domain.entity.MenuEntity">
+        <!--@mbg.generated-->
+        <!--@Table tb_menu-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="module_id" jdbcType="BIGINT" property="moduleId"/>
+        <result column="module_code" jdbcType="VARCHAR" property="moduleCode"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="permission" jdbcType="VARCHAR" property="permission"/>
+        <result column="type" jdbcType="SMALLINT" property="type"/>
+        <result column="sort" jdbcType="INTEGER" property="sort"/>
+        <result column="path" jdbcType="VARCHAR" property="path"/>
+        <result column="parent_id" jdbcType="BIGINT" property="parentId"/>
+        <result column="icon" jdbcType="VARCHAR" property="icon"/>
+        <result column="remark" jdbcType="VARCHAR" property="remark"/>
+        <result column="creator" jdbcType="BIGINT" property="creator"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="updater" jdbcType="BIGINT" property="updater"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="deleted" jdbcType="SMALLINT" property="deleted"/>
+        <result column="tenant_id" jdbcType="BIGINT" property="tenantId"/>
+    </resultMap>
+    <resultMap id="menuTree" type="com.landleaf.oauth.domain.response.MenuTabulationResponse">
+        <result column="id" property="menuId"/>
+        <result column="name" property="menuName"/>
+        <result column="type" property="menuType"/>
+        <result column="path" property="menuPath"/>
+        <result column="sort" property="menuSort"/>
+        <result column="icon" property="menuIcon"/>
+        <result column="open_with" property="openWith"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="remark" property="menuRemark"/>
+        <result column="permission" property="permission"/>
+        <collection property="children" ofType="com.landleaf.oauth.domain.response.MenuTabulationResponse"
+                    select="searchMenuChildren" column="id" javaType="java.util.ArrayList"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id,
+        module_id,
+        module_code,
+        "name",
+        permission,
+        "type",
+        sort,
+        "path",
+        parent_id,
+        icon,
+        remark,
+        creator,
+        create_time,
+        updater,
+        update_time,
+        deleted,
+        tenant_id
+    </sql>
+
+    <select id="searchDeletedMenu" resultMap="BaseResultMap">
+        select id,
+               module_id,
+               module_code,
+               "name",
+               permission,
+               "type",
+               sort,
+               "path",
+               parent_id,
+               icon,
+               remark,
+               creator,
+               create_time,
+               updater,
+               update_time,
+               deleted,
+               tenant_id
+        from tb_menu
+        where deleted = 1
+          and permission = #{permission}
+          and tenant_id = #{tenantId}
+    </select>
+
+    <update id="recoverDeletedMenu">
+        update tb_menu
+        set deleted = 0
+        where id = #{menuId}
+    </update>
+
+    <select id="searchTenantMaxSort" resultType="java.lang.Long">
+        select COALESCE(MAX(sort), 0)
+        from tb_menu
+        where tenant_id = #{tenantId}
+    </select>
+
+    <select id="searchMenuTree" resultMap="menuTree">
+        SELECT id,
+               name,
+               type,
+               path,
+               sort,
+               icon,
+               remark,
+               permission,
+               open_with,
+               parent_id
+        FROM tb_menu
+        WHERE module_id = #{moduleId}
+          and deleted = 0
+          and tenant_id = #{tenantId}
+          and parent_id = 0
+        order by sort
+    </select>
+
+    <select id="searchMenuChildren" resultMap="menuTree">
+        SELECT id,
+               name,
+               type,
+               path,
+               sort,
+               icon,
+               remark,
+               permission,
+               open_with,
+               parent_id
+        FROM tb_menu
+        where parent_id = #{parentId}
+          and deleted = 0
+        order by sort
+    </select>
+
+    <select id="recursionMenuByPermission" resultMap="BaseResultMap">
+        WITH RECURSIVE menus AS (SELECT id,
+        module_id,
+        module_code,
+        name,
+        permission,
+        type,
+        sort,
+        path,
+        parent_id,
+        icon,
+        remark,
+        open_with
+        FROM tb_menu
+        WHERE deleted = 0
+        and tenant_id = #{tenantId}
+        and permission in
+        <foreach collection="permissions" open="(" separator="," item="permission" close=")">
+            #{permission}
+        </foreach>
+        UNION ALL
+        SELECT tm.id,
+        tm.module_id,
+        tm.module_code,
+        tm.name,
+        tm.permission,
+        tm.type,
+        tm.sort,
+        tm.path,
+        tm.parent_id,
+        tm.icon,
+        tm.remark,
+        tm.open_with
+        FROM tb_menu tm
+        JOIN menus m
+        ON tm.id = m.parent_id
+        where tm.deleted = 0
+        and tm.tenant_id = #{tenantId}
+        )
+        SELECT distinct(id),
+        module_id,
+        module_code,
+        name,
+        permission,
+        type,
+        sort,
+        path,
+        parent_id,
+        icon,
+        remark,
+        open_with
+        FROM menus;
+    </select>
+
+    <select id="excludeSysMenu" resultType="java.lang.Long">
+        select distinct id from tb_menu t1 where t1.id in
+        <foreach collection="deleteMenus" open="(" separator="," item="menuid" close=")">
+            #{menuid}
+        </foreach>
+        and EXISTS (select 1 from tb_menu_system t2 where t2.permission = t1.permission)
+    </select>
+
+    <select id="selectTenantSpecialPermission" resultType="java.lang.String">
+        SELECT ta.permission
+        FROM tb_menu ta
+        WHERE ta.deleted = 0
+          AND ta.tenant_id = #{tenantId}
+          AND NOT EXISTS (SELECT *
+                          FROM tb_menu_system
+                          WHERE permission = ta.permission)
+    </select>
+
+    <select id="selectTenantUnShowPermissions" resultType="java.lang.String">
+        SELECT ta.permission
+        FROM tb_menu ta
+                 INNER JOIN (SELECT module_id, parent_id, COUNT("id") AS num
+                             FROM tb_menu
+                             WHERE deleted = 0
+                               AND tenant_id = #{tenantId}
+                             GROUP BY module_id, parent_id) tb
+                            ON ta."id" = tb.parent_id
+                 INNER JOIN (SELECT ta.permission, tb.num
+                             FROM tb_menu_system ta
+                                      INNER JOIN (SELECT module_id, parent_id, COUNT("id") AS num
+                                                  FROM tb_menu_system
+                                                  GROUP BY module_id, parent_id) tb
+                                                 ON ta."id" = tb.parent_id) tc
+                            ON ta.permission = tc.permission
+        WHERE ta.deleted = 0
+          AND ta.tenant_id = #{tenantId}
+          AND tb.num &lt; tc.num
+    </select>
+</mapper>

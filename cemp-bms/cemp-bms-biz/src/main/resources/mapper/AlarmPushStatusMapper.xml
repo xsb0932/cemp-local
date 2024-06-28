@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.AlarmPushStatusMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.bms.domain.entity.AlarmPushStatusEntity">
+        <id column="id" property="id"/>
+        <result column="rule_id" property="ruleId"/>
+        <result column="email_status" property="emailStatus"/>
+        <result column="message_status" property="messageStatus"/>
+        <result column="ding_status" property="dingStatus"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="email_sort" property="emailSort"/>
+        <result column="message_sort" property="messageSort"/>
+        <result column="ding_sort" property="dingSort"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,rule_id,email_status,message_status,ding_status,tenant_id,email_sort,message_sort,ding_sort
+    </sql>
+</mapper>

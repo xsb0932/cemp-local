@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.jjgj.dal.mapper.JjgjReportPushMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.jjgj.domain.entity.JjgjReportPushEntity">
+        <id column="id" property="id"/>
+        <result column="biz_project_id" property="bizProjectId"/>
+        <result column="week_status" property="weekStatus"/>
+        <result column="week_push" property="weekPush"/>
+        <result column="week_codes" property="weekCodes"
+                typeHandler="com.landleaf.pgsql.handler.type.StringListTypeHandler"/>
+        <result column="week_user_ids" property="weekUserIds"
+                typeHandler="com.landleaf.pgsql.handler.type.LongListTypeHandler"/>
+        <result column="month_status" property="monthStatus"/>
+        <result column="month_push" property="monthPush"/>
+        <result column="month_codes" property="monthCodes"
+                typeHandler="com.landleaf.pgsql.handler.type.StringListTypeHandler"/>
+        <result column="month_user_ids" property="monthUserIds"
+                typeHandler="com.landleaf.pgsql.handler.type.LongListTypeHandler"/>
+        <result column="tenant_id" property="tenantId"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,biz_project_id,week_status,week_push,week_codes,week_user_ids,month_status,month_push,month_codes,month_user_ids,tenant_id
+    </sql>
+
+    <resultMap id="ReportPushConfigResponseMap" type="com.landleaf.jjgj.domain.response.ReportPushConfigResponse">
+        <result column="week_codes" property="weekCodes"
+                typeHandler="com.landleaf.pgsql.handler.type.StringListTypeHandler"/>
+        <result column="week_user_ids" property="weekUserIds"
+                typeHandler="com.landleaf.pgsql.handler.type.LongListTypeHandler"/>
+        <result column="month_status" property="monthStatus"/>
+        <result column="month_codes" property="monthCodes"
+                typeHandler="com.landleaf.pgsql.handler.type.StringListTypeHandler"/>
+        <result column="month_user_ids" property="monthUserIds"
+                typeHandler="com.landleaf.pgsql.handler.type.LongListTypeHandler"/>
+    </resultMap>
+
+    <select id="projectConfig" resultMap="ReportPushConfigResponseMap">
+        SELECT biz_project_id,
+               week_status,
+               week_push,
+               week_codes,
+               week_user_ids,
+               month_status,
+               month_push,
+               month_codes,
+               month_user_ids
+        FROM jjgj_report_push
+        WHERE deleted = 0
+          AND biz_project_id = #{bizProjectId}
+    </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT biz_project_id,
+               week_status,
+               week_push,
+               week_codes,
+               week_user_ids,
+               month_status,
+               month_push,
+               month_codes,
+               month_user_ids
+        FROM jjgj_report_push
+        WHERE deleted = 0
+    </select>
+
+</mapper>

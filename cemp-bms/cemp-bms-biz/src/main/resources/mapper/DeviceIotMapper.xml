@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.DeviceIotMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.bms.domain.entity.DeviceIotEntity">
+        <id column="id" property="id"/>
+        <result column="biz_project_id" property="bizProjectId"/>
+        <result column="biz_area_id" property="bizAreaId"/>
+        <result column="area_path" property="areaPath"/>
+        <result column="biz_device_id" property="bizDeviceId"/>
+        <result column="name" property="name"/>
+        <result column="biz_product_id" property="bizProductId"/>
+        <result column="biz_category_id" property="bizCategoryId"/>
+        <result column="code" property="code"/>
+        <result column="tenant_id" property="tenantId"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,biz_project_id,biz_area_id,area_path,biz_device_id,name,biz_product_id,biz_category_id,code,tenant_id
+    </sql>
+
+
+    <select id="listGatewayDeviceIdRelationByDeviceId"
+            resultType="com.landleaf.bms.domain.dto.GatewayDeviceIdRelationDTO">
+        SELECT ta.biz_device_id, ta.biz_product_id, ta.source_device_id, tb.biz_id AS bizGatewayId
+        FROM tb_device_iot ta
+                 INNER JOIN tb_gateway tb
+                            ON tb.deleted = 0
+                                AND tb.project_biz_id = ta.biz_project_id
+                                AND jsonb_exists(tb.product_biz_ids::JSONB, ta.biz_product_id)
+        WHERE ta.deleted = 0
+          AND ta."id" = #{id}
+          AND ta.tenant_id = #{tenantId}
+          AND tb.tenant_id = #{tenantId};
+    </select>
+
+    <select id="deviceManagePageQuery" resultType="com.landleaf.bms.domain.response.DeviceManagerPageResponse">
+        SELECT ta.id,
+        ta.biz_device_id,
+        ta."name",
+        ta.location_desc,
+        tb."name" AS projectName,
+        tc."name" AS productName,
+        td."name" AS categoryName
+        FROM tb_device_iot ta
+        LEFT JOIN tb_project tb ON ta.biz_project_id = tb.biz_project_id AND tb.deleted = 0
+        LEFT JOIN tb_product tc ON ta.biz_product_id = tc.biz_id AND tc.deleted = 0
+        LEFT JOIN tb_category_management_category td ON ta.biz_category_id = td.biz_id AND td.deleted = 0
+        WHERE ta.deleted = 0
+        <choose>
+            <when test="bizDeviceIds != null">
+                AND ta.biz_device_id IN
+                <foreach collection="bizDeviceIds" separator="," open="(" close=")" item="bizDeviceId">
+                    #{bizDeviceId}
+                </foreach>
+            </when>
+            <otherwise>
+                AND ta.biz_project_id IN
+                <foreach collection="projectBizIds" separator="," open="(" close=")" item="projectId">
+                    #{projectId}
+                </foreach>
+                <if test="areaIds != null">
+                    AND ta.biz_area_id IN
+                    <foreach collection="areaIds" separator="," open="(" close=")" item="areaId">
+                        #{areaId}::text
+                    </foreach>
+                </if>
+                <if test="categoryIds != null">
+                    AND ta.biz_category_id IN
+                    <foreach collection="categoryIds" separator="," open="(" close=")" item="categoryId">
+                        #{categoryId}
+                    </foreach>
+                </if>
+                <if test="bizProductId != null and bizProductId != ''">
+                    AND ta.biz_product_id = #{bizProductId}
+                </if>
+                <if test="name != null and name != ''">
+                    AND ta.name LIKE CONCAT('%', #{name}::text, '%')
+                </if>
+            </otherwise>
+        </choose>
+        ORDER BY ta."id"
+    </select>
+
+    <select id="selectAllBizDeviceIdWhenPage" resultType="java.lang.String">
+        SELECT ta.biz_device_id
+        FROM tb_device_iot ta
+        WHERE ta.deleted = 0
+        AND ta.biz_project_id IN
+        <foreach collection="projectBizIds" separator="," open="(" close=")" item="projectId">
+            #{projectId}
+        </foreach>
+        <if test="areaIds != null">
+            AND ta.biz_area_id IN
+            <foreach collection="areaIds" separator="," open="(" close=")" item="areaId">
+                #{areaId}::text
+            </foreach>
+        </if>
+        <if test="categoryIds != null">
+            AND ta.biz_category_id IN
+            <foreach collection="categoryIds" separator="," open="(" close=")" item="categoryId">
+                #{categoryId}
+            </foreach>
+        </if>
+        <if test="bizProductId != null and bizProductId != ''">
+            AND ta.biz_product_id = #{bizProductId}
+        </if>
+        <if test="name != null and name != ''">
+            AND ta.name LIKE CONCAT('%', #{name}::text, '%')
+        </if>
+    </select>
+
+    <select id="detail" resultType="com.landleaf.bms.domain.response.DeviceManagerDetailResponse">
+        SELECT ta."id",
+               ta."name",
+               ta.biz_device_id,
+               tc.image,
+               ta.device_desc,
+               tc."name" AS categoryName,
+               tb."name" AS productName,
+               tb.model,
+               ta.source_device_id,
+               ta.code,
+               td."name" AS projectName,
+               ta.location_desc
+        FROM tb_device_iot ta
+                 LEFT JOIN tb_product tb ON ta.biz_product_id = tb.biz_id AND tb.deleted = 0
+                 LEFT JOIN tb_category_management_category tc ON tc.biz_id = ta.biz_category_id AND tc.deleted = 0
+                 LEFT JOIN tb_project td ON td.biz_project_id = ta.biz_project_id AND td.deleted = 0
+        WHERE ta.deleted = 0
+          AND ta.biz_device_id = #{bizDeviceId}
+    </select>
+</mapper>

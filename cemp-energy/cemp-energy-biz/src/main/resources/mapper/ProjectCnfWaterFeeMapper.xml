@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectCnfWaterFeeMapper">
+	<resultMap id="BaseResultMap"
+               type="com.landleaf.energy.domain.entity.ProjectCnfWaterFeeEntity">
+                					<id column="id" property="id"/>
+				        		        		        				<result column="project_id" property="projectId"/>
+					        		        				<result column="charging_mode" property="chargingMode"/>
+					        		        				<result column="price" property="price"/>
+					        		        				<result column="sewage_ratio" property="sewageRatio"/>
+					        		        				<result column="sewage_price" property="sewagePrice"/>
+					        		        				<result column="tenant_id" property="tenantId"/>
+					    </resultMap>
+
+    <sql id="base_sql_column">
+    	id,project_id,charging_mode,price,sewage_ratio,sewage_price,tenant_id
+    </sql>
+	
+	<update id="updateIsDeleted">
+		update tb_project_cnf_water_fee
+		set deleted = #{isDeleted}
+		where id in
+		<foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</update>
+</mapper>

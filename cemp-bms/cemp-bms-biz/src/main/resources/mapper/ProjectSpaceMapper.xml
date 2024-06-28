@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.ProjectSpaceMapper">
+    <select id="recursiveUp" resultType="com.landleaf.bms.domain.entity.ProjectSpaceEntity">
+        with recursive tps0 as (select tps.id, tps.name, tps.parent_id
+                                from tb_project_space tps
+                                where tps.id = #{spaceId}
+                                  and deleted = 0
+                                union all
+                                select tpss.id, tpss.name, tpss.parent_id
+                                from tps0,
+                                     tb_project_space tpss
+                                where tpss.id = tps0.parent_id
+                                  and deleted = 0)
+        select distinct tps0.id, tps0.name, tps0.parent_id
+        from tps0
+    </select>
+
+    <select id="recursiveDownById" resultType="com.landleaf.bms.domain.entity.ProjectSpaceEntity">
+        WITH RECURSIVE tps0 AS (SELECT tps.id, tps.name, tps.parent_id
+                                FROM tb_project_space tps
+                                WHERE tps.id = #{id}
+                                  AND deleted = 0
+                                UNION ALL
+                                SELECT tpss.id, tpss.name, tpss.parent_id
+                                FROM tps0,
+                                     tb_project_space tpss
+                                WHERE tpss.parent_id = tps0.id
+                                  AND deleted = 0)
+        SELECT tps0.*
+        FROM tps0
+    </select>
+</mapper>

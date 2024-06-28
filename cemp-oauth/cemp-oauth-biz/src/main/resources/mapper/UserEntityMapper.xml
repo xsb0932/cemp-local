@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.oauth.dal.mapper.UserEntityMapper">
+    <resultMap id="BaseResultMap" type="com.landleaf.oauth.domain.entity.UserEntity">
+        <!--@mbg.generated-->
+        <!--@Table tb_user-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="username" jdbcType="VARCHAR" property="username"/>
+        <result column="password" jdbcType="VARCHAR" property="password"/>
+        <result column="salt" jdbcType="VARCHAR" property="salt"/>
+        <result column="nickname" jdbcType="VARCHAR" property="nickname"/>
+        <result column="email" jdbcType="VARCHAR" property="email"/>
+        <result column="mobile" jdbcType="VARCHAR" property="mobile"/>
+        <result column="status" jdbcType="SMALLINT" property="status"/>
+        <result column="creator" jdbcType="BIGINT" property="creator"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="updater" jdbcType="BIGINT" property="updater"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="deleted" jdbcType="SMALLINT" property="deleted"/>
+        <result column="tenant_id" jdbcType="BIGINT" property="tenantId"/>
+    </resultMap>
+    <resultMap id="SearchUsers" type="com.landleaf.oauth.domain.response.UserTabulationResponse">
+        <!--@mbg.generated-->
+        <!--@Table tb_user-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="username" jdbcType="VARCHAR" property="username"/>
+        <result column="nickname" jdbcType="VARCHAR" property="nickname"/>
+        <result column="tenantName" property="tenantName"/>
+        <result column="tenantId" property="tenantId"/>
+        <result column="email" jdbcType="VARCHAR" property="email"/>
+        <result column="mobile" jdbcType="VARCHAR" property="mobile"/>
+        <result column="status" jdbcType="SMALLINT" property="status"/>
+        <result column="roleNames" property="roleNames"/>
+        <collection property="roleTypes" ofType="java.lang.Short">
+            <result column="roleType"/>
+        </collection>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id,
+        username,
+        "password",
+        salt,
+        nickname,
+        email,
+        mobile,
+        "status",
+        creator,
+        create_time,
+        updater,
+        update_time,
+        deleted,
+        tenant_id
+    </sql>
+
+    <select id="searchMenusByUser" resultType="java.lang.Long">
+        select trm.menu_id
+        from tb_user tu
+                 left join tb_user_role tur on tu.id = tur.user_id
+                 left join tb_role tr on tur.role_id = tr.id and tr.status = 0
+                 left join tb_role_menu trm on tur.role_id = trm.role_id
+        where tu.id = #{userId}
+          and tu.deleted = 0
+          and tur.deleted = 0
+          and tr.deleted = 0
+          and trm.deleted = 0
+    </select>
+
+    <select id="searchCountRole" resultType="int">
+        select count(tr)
+        from tb_user tu
+                 left join tb_user_role tur on tu.id = tur.user_id
+                 left join tb_role tr on tr.id = tur.role_id and tr.type = #{roleType}
+        where tu.id = #{userId}
+          and tu.deleted = 0
+          and tur.deleted = 0
+          and tr.deleted = 0
+    </select>
+
+    <select id="searchUsersByTenant" resultMap="BaseResultMap">
+        select id,
+               username,
+               "password",
+               salt,
+               nickname,
+               email,
+               mobile,
+               "status",
+               creator,
+               create_time,
+               updater,
+               update_time,
+               deleted,
+               tenant_id
+        from tb_user
+        where tenant_id = #{tenantId}
+          and deleted = 0
+    </select>
+
+    <select id="searchUsers" resultMap="SearchUsers">
+        select tu.id,
+        tu.tenant_id as tenantId,
+        tt.name as tenantName,
+        tu.username,
+        tu.nickname,
+        tu.email,
+        tu.mobile,
+        tu.status,
+        string_agg(tr.name, ';') as roleNames,
+        tr.type as roleType
+        from tb_user tu
+        left join tb_user_role tur
+        on tur.user_id = tu.id
+        left join tb_role tr
+        on tur.role_id = tr.id
+        left join tb_tenant tt
+        on tt.id = tu.tenant_id
+        <where>
+            tu.deleted = 0 and tur.deleted = 0 and tr.deleted = 0 and tt.deleted = 0
+            <if test="request.email != null and request.email != ''">
+                and tu.email like concat('%', #{request.email}::text, '%')
+            </if>
+            <if test="request.mobile != null and request.mobile != ''">
+                and tu.mobile like concat('%', #{request.mobile}::text, '%')
+            </if>
+            <if test="request.nickname != null and request.nickname != ''">
+                and tu.nickname like concat('%', #{request.nickname}::text, '%')
+            </if>
+            <if test="request.tenantId != null">
+                and tu.tenant_id = #{request.tenantId}
+            </if>
+        </where>
+        group by tu.id, tt.name, tu.username, tu.nickname, tu.email, tu.mobile, tu.status, tr.type, tu.tenant_id
+        order by tu.tenant_id, tu.id
+    </select>
+
+    <select id="recursionMenusByUser" resultType="java.lang.Long">
+        WITH RECURSIVE menus AS (SELECT tm."id", tm.parent_id
+                                 FROM tb_user tu
+                                          LEFT JOIN tb_user_role tur ON tu."id" = tur.user_id
+                                          LEFT JOIN tb_role tr
+                                                    ON tur.role_id = tr."id"
+                                                        AND tr.status = 0
+                                          LEFT JOIN tb_role_menu trm ON tur.role_id = trm.role_id
+                                          LEFT JOIN tb_menu tm ON trm.menu_id = tm."id"
+                                 WHERE tu."id" = #{userId}
+                                   AND tu.deleted = 0
+                                   AND tur.deleted = 0
+                                   AND tr.deleted = 0
+                                   AND trm.deleted = 0
+                                   AND tm.deleted = 0
+                                 UNION ALL
+                                 SELECT tm."id", tm.parent_id
+                                 FROM tb_menu tm
+                                          JOIN menus tms ON tm."id" = tms.parent_id
+                                 WHERE tm.deleted = 0
+                                   AND tm.tenant_id = #{tenantId})
+        SELECT DISTINCT "id"
+        FROM menus
+    </select>
+</mapper>

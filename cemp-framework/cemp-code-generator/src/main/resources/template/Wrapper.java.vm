@@ -1,0 +1,84 @@
+package $!{package};
+
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
+import com.landleaf.pgsql.base.wrapper.BaseWrapper;
+import org.springframework.util.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import $!{entityPackage}.$!{entity};
+import $!{voPackage}.$!{vo};
+
+/**
+ * #if ("$!{table.comment}"=="")$!{entity}对象的展示类型转化工具#else$!{table.comment}的展示类型转化工具#end
+
+ *
+ * @author $!{author}
+ * @since $!{date}
+ */
+public class $!{wrapper} extends BaseWrapper<$!{vo}, $!{entity}> {
+	/**
+	 * 构造
+	 */
+	public static $!{wrapper} builder() {
+		return new $!{wrapper}();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public $!{vo} entity2VO($!{entity} e) {
+		if (null == e) {
+			return null;
+		}
+		$!{vo} vo = new $!{vo}();
+		BeanUtil.copyProperties(e, vo);
+		return vo;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public List<$!{vo}> listEntity2VO(List<$!{entity}> eList) {
+		if (!CollectionUtils.isEmpty(eList)) {
+			return eList.stream().map(i -> BeanUtil.copyProperties(i, $!{vo}.class))
+					.collect(Collectors.toList());
+		}
+		return new ArrayList<$!{vo}>();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public PageDTO<$!{vo}> pageEntity2VO(IPage<$!{entity}> page) {
+		PageDTO<$!{vo}> pageVO = new PageDTO<$!{vo}>();
+		if (null == page) {
+			pageVO.setCurrent(0);
+			pageVO.setTotal(0);
+			pageVO.setPages(1);
+			pageVO.setRecords(new ArrayList<$!{vo}>());
+			return pageVO;
+		}
+		pageVO.setCurrent(page.getCurrent());
+		pageVO.setTotal(page.getTotal());
+		pageVO.setPages(page.getPages());
+		pageVO.setRecords(listEntity2VO(page.getRecords()));
+		return pageVO;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public PageDTO<$!{vo}> pageEntity2VO(IPage<$!{entity}> page, Map<?, ?> map) {
+		return pageEntity2VO(page);
+	}
+}

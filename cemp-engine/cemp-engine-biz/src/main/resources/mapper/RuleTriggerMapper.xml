@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.engine.dal.mapper.RuleTriggerMapper">
+	<resultMap id="BaseResultMap"
+               type="com.landleaf.engine.domain.entity.RuleTriggerEntity">
+                					<id column="id" property="id"/>
+				        		        		        				<result column="trigger_type" property="triggerType"/>
+					        		        				<result column="message_type" property="messageType"/>
+					        		        				<result column="target_biz_prod_id" property="targetBizProdId"/>
+					        		        				<result column="target_biz_device_ids" property="targetBizDeviceIds"/>
+					        		        				<result column="biz_rule_id" property="bizRuleId"/>
+					        		        				<result column="repeat_time" property="repeatTime"/>
+					        		        				<result column="repeat_type" property="repeatType"/>
+					        		        				<result column="target_time" property="targetTime"/>
+					    </resultMap>
+
+    <sql id="base_sql_column">
+    	id,trigger_type,message_type,target_biz_prod_id,target_biz_device_ids,biz_rule_id,repeat_time,repeat_type,target_time
+    </sql>
+	
+	<update id="updateIsDeleted">
+		update tb_rule_trigger
+		set deleted = #{isDeleted}
+		where id in
+		<foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</update>
+</mapper>

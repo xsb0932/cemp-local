@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.oauth.dal.mapper.RoleEntityMapper">
+    <resultMap id="BaseResultMap" type="com.landleaf.oauth.domain.entity.RoleEntity">
+        <!--@mbg.generated-->
+        <!--@Table tb_role-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="status" jdbcType="SMALLINT" property="status"/>
+        <result column="creator" jdbcType="BIGINT" property="creator"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="updater" jdbcType="BIGINT" property="updater"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="deleted" jdbcType="SMALLINT" property="deleted"/>
+        <result column="tenant_id" jdbcType="BIGINT" property="tenantId"/>
+        <result column="type" jdbcType="SMALLINT" property="type"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id,
+        "name",
+        "status",
+        creator,
+        create_time,
+        updater,
+        update_time,
+        deleted,
+        tenant_id,
+        "type"
+    </sql>
+
+    <select id="getRolesByCurrentLoginUser"
+            resultType="com.landleaf.oauth.domain.response.UserLoginSuccessResponse$UserRoleResponse">
+        select tr.id   as role_id,
+               tr.name as role_name,
+               tr.type as role_type
+        from tb_role tr
+                 left join tb_user_role tur on tr.id = tur.role_id
+        where tur.user_id = #{userId}
+          and tur.deleted = 0
+          and tr.deleted = 0
+    </select>
+
+    <select id="getRoleListResponse" resultType="com.landleaf.oauth.domain.response.RoleListResponse">
+        select tr.*, tt.name as tenant_name, tt.id as tenant_id
+        from tb_role tr
+                 left join tb_tenant tt on tr.tenant_id = tt.id and tt.deleted = 0
+        where tr.deleted = 0
+        <if test="request.name != null and request.name != ''">
+            and tr.name like '%' || #{request.name} || '%'
+        </if>
+        <if test="request.tenantName != null and request.tenantName != ''">
+            and tt.name like '%' || #{request.tenantName} || '%'
+        </if>
+        <if test="request.tenantId != null">
+            and tt.id = #{request.tenantId}
+        </if>
+        order by tt.id
+    </select>
+
+    <select id="getRoleModuleMenuList" resultType="com.landleaf.oauth.domain.response.RoleListResponse$Menu">
+        select tmo.name      as module_name,
+               tm.module_id,
+               tm.module_code,
+               tm.name       as menu_name,
+               tm.permission as menu_permission,
+               tm.type,
+               tm.path       as menu_path,
+               tm.parent_id,
+               tm.id         as menu_id,
+               tm.icon       as menu_icon
+        from tb_role_menu trm
+                 left join tb_menu tm on trm.menu_id = tm.id
+                 left join tb_module tmo on tmo.id = tm.module_id
+        where trm.deleted = 0
+          and tm.deleted = 0
+          and tmo.deleted = 0
+          and trm.role_id = #{roleId}
+        order by tm.sort
+    </select>
+
+    <select id="getRoleUserList" resultType="com.landleaf.oauth.domain.response.RoleListResponse$User">
+        select *
+        from tb_user_role tur
+                 left join tb_user tu on tur.user_id = tu.id
+        where tur.deleted = 0
+          and tu.deleted = 0
+          and tur.role_id = #{roleId}
+    </select>
+
+    <select id="getUserRoleByRoleType" resultType="com.landleaf.oauth.domain.entity.UserRoleEntity">
+        select tur.*
+        from tb_user_role tur
+                 left join tb_role tr on tur.role_id = tr.id
+        where tr.type = #{roleType}
+          and tur.user_id = #{userId}
+          and tr.deleted = 0 and tur.deleted = 0
+    </select>
+
+    <select id="getSimpleRoleListResponse" resultType="com.landleaf.oauth.domain.response.SimpleRoleListResponse">
+        select id, name, type
+        from tb_role
+        where deleted = 0
+    </select>
+
+    <select id="getSimpleRoleListByTenant" resultType="com.landleaf.oauth.domain.response.SimpleRoleListResponse">
+        select id, name, type
+        from tb_role
+        where deleted = 0
+          and tenant_id = #{tenantId}
+    </select>
+</mapper>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>cemp</artifactId>
+        <groupId>com.landleaf</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>cemp-framework</artifactId>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>cemp-redis</module>
+        <module>cemp-feign</module>
+        <module>cemp-comm</module>
+        <module>cemp-web</module>
+        <module>cemp-pgsql</module>
+        <module>cemp-influx</module>
+        <module>cemp-kafka</module>
+        <module>cemp-influx-1</module>
+        <module>cemp-mqtt</module>
+        <module>cemp-code-generator</module>
+        <module>cemp-minio</module>
+        <module>cemp-operate-log</module>
+        <module>cemp-mail</module>
+        <module>cemp-script</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+    </properties>
+
+</project>

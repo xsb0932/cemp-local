@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: cemp-data
+  profiles:
+    active: dev
+  main:
+    allow-circular-references: true # 允许循环依赖，因为项目是三层架构，无法避免这个情况。
+    allow-bean-definition-overriding: true # 允许 Bean 覆盖，例如说 Dubbo 或者 Feign 等会存在重复定义的服务
+  # Servlet 配置
+  servlet:
+    # 文件上传相关配置项
+    multipart:
+      max-file-size: 16MB # 单个文件大小
+      max-request-size: 32MB # 设置总上传的文件大小
+
+server:
+  port: 30020
+  servlet:
+    context-path: /
+
+nacos:
+  logging:
+    default:
+      config:
+        enabled: false
+
+# knife4j
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    show-extensions: true
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.landleaf.data.controller
+  default-flat-param-object: false

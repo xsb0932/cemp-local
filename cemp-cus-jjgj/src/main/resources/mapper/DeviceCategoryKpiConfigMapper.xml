@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.mapper.DeviceCategoryKpiConfigMapper">
+	<resultMap id="BaseResultMap"
+               type="com.landleaf.jjgj.domain.entity.DeviceCategoryKpiConfigEntity">
+                					<id column="id" property="id"/>
+				        		        		        				<result column="code" property="code"/>
+					        		        				<result column="name" property="name"/>
+					        		        				<result column="biz_category_id" property="bizCategoryId"/>
+					        		        				<result column="category_name" property="categoryName"/>
+					        		        				<result column="kpi_type_code" property="kpiTypeCode"/>
+					        		        				<result column="kpi_type" property="kpiType"/>
+					        		        				<result column="sta_interval_hour" property="staIntervalHour"/>
+					        		        				<result column="sta_interval_ymd" property="staIntervalYmd"/>
+					        		        				<result column="unit" property="unit"/>
+					    </resultMap>
+
+    <sql id="base_sql_column">
+    	id,code,name,biz_category_id,category_name,kpi_type_code,kpi_type,sta_interval_hour,sta_interval_ymd,unit
+    </sql>
+
+	<update id="updateIsDeleted">
+		update tb_device_category_kpi_config
+		set deleted = #{isDeleted}
+		where id in
+		<foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</update>
+</mapper>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.monitor.dal.mapper.DeviceModeMapper">
+	<resultMap id="BaseResultMap"
+               type="com.landleaf.monitor.domain.entity.DeviceModeEntity">
+                					<id column="id" property="id"/>
+				        		        		        				<result column="biz_device_id" property="bizDeviceId"/>
+					        		        				<result column="mode_code" property="modeCode"/>
+					        		        				<result column="mode_desc" property="modeDesc"/>
+					        		        				<result column="tenant_id" property="tenantId"/>
+					    </resultMap>
+
+    <sql id="base_sql_column">
+    	id,biz_device_id,mode_code,mode_desc,tenant_id
+    </sql>
+	
+	<update id="updateIsDeleted">
+		update tb_device_mode
+		set deleted = #{isDeleted}
+		where id in
+		<foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</update>
+</mapper>

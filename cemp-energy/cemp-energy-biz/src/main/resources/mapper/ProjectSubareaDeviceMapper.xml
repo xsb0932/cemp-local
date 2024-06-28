@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectSubareaDeviceMapper">
+	<resultMap id="BaseResultMap"
+               type="com.landleaf.energy.domain.entity.ProjectSubareaDeviceEntity">
+                					<id column="id" property="id"/>
+				        		        		        				<result column="subaread_id" property="subareadId"/>
+					        		        				<result column="device_id" property="deviceId"/>
+					        		        				<result column="compute_tag" property="computeTag"/>
+					        		        				<result column="tenant_id" property="tenantId"/>
+					    </resultMap>
+
+    <sql id="base_sql_column">
+    	id,subaread_id,device_id,compute_tag,tenant_id
+    </sql>
+
+	<update id="updateIsDeleted">
+		update tb_project_subarea_device
+		set deleted = #{isDeleted}
+		where id in
+		<foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</update>
+</mapper>

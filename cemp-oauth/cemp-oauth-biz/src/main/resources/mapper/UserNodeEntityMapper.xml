@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.oauth.dal.mapper.UserNodeEntityMapper">
+    <resultMap id="BaseResultMap" type="com.landleaf.oauth.domain.entity.UserNodeEntity">
+        <!--@mbg.generated-->
+        <!--@Table tb_user_node-->
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="user_id" jdbcType="BIGINT" property="userId"/>
+        <result column="node_id" jdbcType="BIGINT" property="nodeId"/>
+        <result column="path" jdbcType="VARCHAR" property="path"/>
+        <result column="type" jdbcType="SMALLINT" property="type"/>
+        <result column="creator" jdbcType="BIGINT" property="creator"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="updater" jdbcType="BIGINT" property="updater"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="deleted" jdbcType="SMALLINT" property="deleted"/>
+        <result column="tenant_id" jdbcType="BIGINT" property="tenantId"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        id,
+        user_id,
+        node_id,
+        "path",
+        "type",
+        creator,
+        create_time,
+        updater,
+        update_time,
+        deleted,
+        tenant_id
+    </sql>
+</mapper>

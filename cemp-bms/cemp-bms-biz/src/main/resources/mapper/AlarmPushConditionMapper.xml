@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.AlarmPushConditionMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.bms.domain.entity.AlarmPushConditionEntity">
+        <id column="id" property="id"/>
+        <result column="rule_id" property="ruleId"/>
+        <result column="biz_project_id_list" property="bizProjectIdList"
+                typeHandler="com.landleaf.pgsql.handler.type.StringListTypeHandler"/>
+        <result column="alarm_type_list" property="alarmTypeList"
+                typeHandler="com.landleaf.pgsql.handler.type.StringListTypeHandler"/>
+        <result column="alarm_level_list" property="alarmLevelList"
+                typeHandler="com.landleaf.pgsql.handler.type.StringListTypeHandler"/>
+        <result column="alarm_status_list" property="alarmStatusList"
+                typeHandler="com.landleaf.pgsql.handler.type.StringListTypeHandler"/>
+        <result column="alarm_type_flag" property="alarmTypeFlag"/>
+        <result column="alarm_level_flag" property="alarmLevelFlag"/>
+        <result column="alarm_status_flag" property="alarmStatusFlag"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="alarm_type_sort" property="alarmTypeSort"/>
+        <result column="alarm_level_sort" property="alarmLevelSort"/>
+        <result column="alarm_status_sort" property="alarmStatusSort"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,rule_id,biz_project_id_list,alarm_type_list,alarm_level_list,alarm_status_list,tenant_id,alarm_type_flag,alarm_level_flag,alarm_status_flag,alarm_type_sort,alarm_level_sort,alarm_status_sort
+    </sql>
+
+</mapper>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.energy.dal.mapper.ProjectCnfDeviceIndexTransMapper">
+	<resultMap id="BaseResultMap"
+               type="com.landleaf.jjgj.domain.entity.ProjectCnfDeviceIndexTransEntity">
+                					<id column="id" property="id"/>
+				        		        		        				<result column="biz_category_id" property="bizCategoryId"/>
+					        		        				<result column="biz_category_code" property="bizCategoryCode"/>
+					        		        				<result column="trans_index_code" property="transIndexCode"/>
+					        		        				<result column="trans_index_name" property="transIndexName"/>
+					        		        				<result column="biz_project_id" property="bizProjectId"/>
+					        		        				<result column="tenant_id" property="tenantId"/>
+					    </resultMap>
+
+    <sql id="base_sql_column">
+    	id,biz_category_id,biz_category_code,trans_index_code,trans_index_name,biz_project_id,tenant_id
+    </sql>
+
+	<update id="updateIsDeleted">
+		update tb_project_cnf_device_index_trans
+		set deleted = #{isDeleted}
+		where id in
+		<foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</update>
+</mapper>

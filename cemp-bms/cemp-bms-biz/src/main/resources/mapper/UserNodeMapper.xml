@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.bms.dal.mapper.UserNodeMapper">
+
+    <select id="getUserProjRelation" resultType="com.landleaf.bms.api.dto.UserProjRelationResponse">
+        SELECT DISTINCT
+            tp.biz_project_id as bizProjId,
+            tun.user_id
+        FROM
+            tb_project tp
+                LEFT JOIN tb_management_node tmn ON tmn.biz_node_id = tp.biz_node_id
+                LEFT JOIN tb_user_node tun ON tmn."path" LIKE concat ( '%', tun.PATH, '%' )
+        WHERE
+            (
+                    ( tun.TYPE = 2 AND tun.node_id = tmn.ID )
+                    OR ( tun.TYPE = 1 AND tmn.TYPE = '00' )
+                )
+          AND tun.deleted = 0
+          AND tmn.deleted = 0
+          and tp.deleted = 0
+          AND tp.biz_project_id IS NOT NULL
+          AND tp.tenant_id = #{tenantId}
+    </select>
+</mapper>

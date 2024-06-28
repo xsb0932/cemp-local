@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.engine.dal.mapper.RuleMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.engine.domain.entity.RuleEntity">
+        <id column="id" property="id"/>
+        <result column="biz_rule_id" property="bizRuleId"/>
+        <result column="name" property="name"/>
+        <result column="rule_desc" property="ruleDesc"/>
+        <result column="rule_type" property="ruleType"/>
+        <result column="rule_status" property="ruleStatus"/>
+        <result column="biz_project_id" property="bizProjectId"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,biz_rule_id,name,rule_desc,rule_type,rule_status,biz_project_id
+    </sql>
+
+    <update id="updateIsDeleted">
+        update tb_rule
+        set deleted = #{isDeleted}
+        where id in
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+	<select id="selectPageVO" resultType="com.landleaf.engine.domain.vo.RuleVO">
+		select a.*, b.name as projectName from tb_rule a left join tb_project b on a.biz_project_id = b.biz_project_id
+        <if test="null != userId">
+            left join tb_management_node tmn on tmn.biz_node_id=b.biz_node_id
+            left join tb_user_node tun on tmn."path" like concat('%',tun.path,'%')
+        </if>
+		where a.deleted= 0 and b.deleted=0
+        <if test="null != userId">
+            and ((tun.type = 2 and tun.node_id=tmn.id) or (tun.type=1 and tmn.type = '00'))
+            and tun.deleted=0 and tmn.deleted=0 and b.biz_project_id is not null
+            and tun.user_id = #{userId}
+        </if>
+		<if test="null != queryInfo.name">
+			and a.name like concat('%', #{queryInfo.name}::text, '%')
+		</if>
+		<if test="null != queryInfo.ruleType">
+			and a.rule_type = #{queryInfo.ruleType}::text
+		</if>
+		<if test="null != queryInfo.ruleStatus">
+			and a.rule_status = #{queryInfo.ruleStatus}::text
+		</if>
+		<if test="null != queryInfo.projectName">
+			and b.name like concat('%', #{queryInfo.projectName}::text, '%')
+		</if>
+	</select>
+</mapper>

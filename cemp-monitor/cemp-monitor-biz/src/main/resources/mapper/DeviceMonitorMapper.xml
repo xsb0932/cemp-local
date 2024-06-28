@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.landleaf.monitor.dal.mapper.DeviceMonitorMapper">
+    <resultMap id="BaseResultMap"
+               type="com.landleaf.monitor.domain.entity.DeviceMonitorEntity">
+        <id column="id" property="id"/>
+        <result column="biz_project_id" property="bizProjectId"/>
+        <result column="biz_area_id" property="bizAreaId"/>
+        <result column="area_path" property="areaPath"/>
+        <result column="biz_device_id" property="bizDeviceId"/>
+        <result column="name" property="name"/>
+        <result column="biz_product_id" property="bizProductId"/>
+        <result column="biz_category_id" property="bizCategoryId"/>
+        <result column="code" property="code"/>
+        <result column="creator" property="creator"/>
+        <result column="create_time" property="createTime"/>
+        <result column="updater" property="updater"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="tenant_id" property="tenantId"/>
+    </resultMap>
+
+    <sql id="base_sql_column">
+        id
+        ,biz_project_id,biz_area_id,area_path,biz_device_id,name,biz_product_id,biz_category_id,code,creator,create_time,updater,update_time,deleted,tenant_id
+    </sql>
+
+    <update id="updateIsDeleted">
+        update tb_device_monitor
+        set deleted = #{isDeleted}
+        where id in
+        <foreach collection="ids" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="listStaDeviceByCategory" resultType="com.landleaf.monitor.api.dto.DeviceStaDTO">
+        SELECT
+        tdm.biz_device_id,
+        tdm.biz_product_id,
+        tdm.biz_category_id,
+        tdm.biz_project_id,
+        tp.code AS project_code
+        FROM
+        tb_device_monitor tdm
+        INNER JOIN tb_project tp ON tp.biz_project_id = tdm.biz_project_id AND tp.deleted = 0
+        WHERE
+        tdm.deleted = 0
+        AND tdm.biz_category_id IN
+        <foreach collection="bizCategoryIds" open="(" close=")" separator="," item="id">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="pageDeviceMonitor" resultType="com.landleaf.monitor.domain.vo.DeviceMonitorVO">
+        select tdm.id,
+        tdm.biz_project_id,
+        tdm.biz_area_id,
+        tdm.area_path,
+        tdm.biz_device_id,
+        tdm.name,
+        tdm.biz_product_id,
+        tdm.location_desc,
+        tdm.device_desc,
+        tdm.source_device_id,
+        tcmc.name as categoryName,
+        tdm.biz_category_id,
+        tp2.name as productName,
+        tdm.code,
+        tp.name as bizProjectName
+        from tb_device_monitor tdm
+        left join tb_project tp on tdm.biz_project_id = tp.biz_project_id and tp.deleted=0
+        left join tb_category_management_category tcmc on tcmc.biz_id = tdm.biz_category_id and tcmc.deleted=0
+        left join tb_product tp2 on tp2.biz_id = tdm.biz_product_id and tp2.deleted=0
+        <where>
+            tdm.biz_project_id in
+            <foreach collection="query.projectIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+            <if test="query.name != null and query.name != ''">
+                and tdm.name like concat('%', #{query.name}::text , '%')
+            </if>
+            <if test="query.bizCategoryId != null and query.bizCategoryId != ''">
+                and tdm.biz_category_id like concat('%', #{query.bizCategoryId}::text , '%')
+            </if>
+            and tdm.deleted = 0
+            <if test="meterBizDeviceIds != null and meterBizDeviceIds.size() > 0">
+                and tdm.biz_device_id NOT IN
+                <foreach collection="meterBizDeviceIds" item="meterBizDeviceId" open="(" close=")" separator=",">
+                    #{meterBizDeviceId}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="pageQuery" resultType="com.landleaf.monitor.domain.response.MonitorDeviceListResponse">
+        select tdm.*,
+        tps.name as areaName,
+        tcmc.name as categoryName,
+        tp2.name as productName,
+        tp.name as projectName
+        from tb_device_monitor tdm
+        left join tb_project tp on tdm.biz_project_id = tp.biz_project_id and tp.deleted=0
+        left join tb_category_management_category tcmc on tcmc.biz_id = tdm.biz_category_id and tcmc.deleted=0
+        left join tb_product tp2 on tp2.biz_id = tdm.biz_product_id and tp2.deleted=0
+        left join tb_project_space tps on tp2.biz_id = tdm.biz_area_id and tps.deleted=0
+        <where>
+            tdm.biz_project_id = #{request.bizProjectId}
+            and tdm.deleted=0
+            <if test="request.deviceName != null and request.deviceName != ''">
+                and tdm.name like concat('%', #{request.deviceName}::text, '%')
+            </if>
+        </where>
+    </select>
+
+    <select id="listStaProject" resultType="com.landleaf.monitor.api.dto.ProjectStaDTO">
+        SELECT DISTINCT tp.biz_project_id,
+                        tp."name"
+        FROM tb_device_monitor tdm
+                 INNER JOIN tb_project tp ON tp.biz_project_id = tdm.biz_project_id
+            AND tp.deleted = 0
+        WHERE tdm.deleted = 0
+    </select>
+
+    <select id="aVueGetDevices" resultType="com.landleaf.monitor.domain.response.AVueDevicePageResponse">
+        SELECT ta.biz_device_id, tb."name" AS categoryName, ta."name", ta.code, ta.location_desc
+        FROM tb_device_monitor ta
+        LEFT JOIN tb_category_management_category tb
+        ON ta.biz_category_id = tb.biz_id
+        AND tb.deleted = 0
+        WHERE ta.deleted = 0
+        AND ta.biz_project_id = #{bizProjectId}
+        <if test="categoryName != null and categoryName != ''">
+            AND tb."name" LIKE '%' || #{categoryName} || '%'
+        </if>
+        <if test="name != null and name != ''">
+            AND ta."name" LIKE '%' || #{name} || '%'
+        </if>
+        <if test="code != null and code != ''">
+            AND ta.code LIKE '%' || #{code} || '%'
+        </if>
+        ORDER BY ta.biz_category_id, ta.biz_device_id
+    </select>
+
+    <select id="aVueGetDeviceAll" resultType="com.landleaf.monitor.domain.response.AVueDeviceListResponse">
+        SELECT ta.biz_device_id, ta."name"
+        FROM tb_device_monitor ta
+        WHERE ta.deleted = 0
+          AND ta.biz_project_id = #{bizProjectId}
+        ORDER BY ta.biz_category_id, ta.biz_device_id
+    </select>
+
+    <select id="selectProjectMeterBizDeviceIds" resultType="java.lang.String">
+        SELECT DISTINCT ta.biz_device_id
+        FROM tb_device_monitor ta
+        LEFT JOIN tb_device_parameter tb ON ta.biz_device_id = tb.biz_device_id
+        AND tb.identifier = 'meterRead'
+        AND tb.deleted = 0
+        WHERE ta.deleted = 0
+        AND ta.biz_project_id = #{bizProjectId}
+        AND ta.biz_category_id IN
+        <foreach collection="bizCategoryIdList" separator="," open="(" close=")" item="id">
+            #{id}
+        </foreach>
+        AND tb."value" = '02'
+    </select>
+
+    <select id="selectProjectsMeterBizDeviceIds" resultType="java.lang.String">
+        SELECT DISTINCT ta.biz_device_id
+        FROM tb_device_monitor ta
+        LEFT JOIN tb_device_parameter tb ON ta.biz_device_id = tb.biz_device_id
+        AND tb.identifier = 'meterRead'
+        AND tb.deleted = 0
+        WHERE ta.deleted = 0
+        AND ta.biz_project_id IN
+        <foreach collection="bizProjectIdList" separator="," open="(" close=")" item="id">
+            #{id}
+        </foreach>
+        AND ta.biz_category_id = #{bizCategoryId}
+        AND tb."value" = '02'
+    </select>
+</mapper>
