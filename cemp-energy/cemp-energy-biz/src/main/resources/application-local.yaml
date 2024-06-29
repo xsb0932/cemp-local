@@ -1,18 +1,18 @@
 spring:
   cloud:
     nacos:
+      username: nacos
+      password: nacos
+      server-addr: 39.98.82.109:8848
+      discovery:
+        namespace: e3bca0e8-505d-42d4-a2e7-686fb8ff2659
+        group: DEFAULT_GROUP
+        ip: localhost
       config:
-        server-addr: 172.20.1.92:18848
-        namespace: 69cce1db-12ee-4205-9e02-041f3b05aa3c
+        server-addr: 39.98.82.109:8848
+        namespace: e3bca0e8-505d-42d4-a2e7-686fb8ff2659
         group: DEFAULT_GROUP
         file-extension: yaml
-      discovery:
-        ip: localhost
-        server-addr: 172.20.1.92:18848
-        namespace: 69cce1db-12ee-4205-9e02-041f3b05aa3c
-        group: DEFAULT_GROUP
-      username: nacos
-      password: landleaf@123.com
   config:
     import:
       - optional:nacos:${spring.application.name}
